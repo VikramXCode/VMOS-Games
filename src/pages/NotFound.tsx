@@ -1,5 +1,7 @@
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Gamepad2, Home } from "lucide-react";
 
 const NotFound = () => {
   const location = useLocation();
@@ -9,13 +11,20 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">404</h1>
-        <p className="mb-4 text-xl text-muted-foreground">Oops! Page not found</p>
-        <a href="/" className="text-primary underline hover:text-primary/90">
-          Return to Home
-        </a>
+        <Gamepad2 className="h-20 w-20 text-primary mx-auto mb-6 animate-pulse-neon" />
+        <h1 className="font-heading text-6xl font-bold text-gradient mb-4">404</h1>
+        <h2 className="font-heading text-xl font-semibold mb-2">Game Over!</h2>
+        <p className="text-muted-foreground mb-8 max-w-md">
+          Looks like this level doesn't exist. Let's get you back to the main menu.
+        </p>
+        <Link to="/">
+          <Button variant="neon" size="lg">
+            <Home className="h-5 w-5" />
+            Back to Home
+          </Button>
+        </Link>
       </div>
     </div>
   );
