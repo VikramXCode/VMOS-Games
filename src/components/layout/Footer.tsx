@@ -21,13 +21,13 @@ export const Footer = () => {
               CONTACT US
             </h4>
             <div className="space-y-2 text-sm text-muted-foreground">
-              <a href="tel:+919876543210" className="flex items-center gap-2 hover:text-primary transition-colors">
+              <a href="tel:+917010905241" className="flex items-center gap-2 hover:text-primary transition-colors">
                 <Phone className="h-4 w-4" />
-                +91 98765 43210
+                +91 7010905241
               </a>
-              <a href="mailto:info@vmosgamestation.com" className="flex items-center gap-2 hover:text-primary transition-colors">
+              <a href="mailto:vmtech.cool@gmail.com" className="flex items-center gap-2 hover:text-primary transition-colors">
                 <Mail className="h-4 w-4" />
-                info@vmosgamestation.com
+                vmtech.cool@gmail.com
               </a>
             </div>
           </div>
@@ -39,8 +39,9 @@ export const Footer = () => {
             </h4>
             <p className="flex items-start gap-2 text-sm text-muted-foreground">
               <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-              123 Gaming Street, Tech Hub,<br />
-              Bangalore, Karnataka 560001
+              5/1, 1st St, Sellam Nagar, Parapalayam,<br />
+              Pirivu, Tiruppur, Andipalayam,<br />
+              Tamil Nadu 641604
             </p>
           </div>
         </div>

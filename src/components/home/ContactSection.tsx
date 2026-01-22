@@ -6,24 +6,25 @@ export const ContactSection = () => {
       <h3 className="font-heading text-lg font-bold text-primary mb-4">Contact Us</h3>
       <div className="space-y-4">
         <a
-          href="tel:+919876543210"
+          href="tel:+917010905241"
           className="flex items-center gap-3 text-sm hover:text-primary transition-colors"
         >
           <Phone className="h-5 w-5 text-primary" />
-          <span>+91 98765 43210</span>
+          <span>+91 7010905241</span>
         </a>
         <a
-          href="mailto:info@vmosgamestation.com"
+          href="mailto:vmtech.cool@gmail.com"
           className="flex items-center gap-3 text-sm hover:text-primary transition-colors"
         >
           <Mail className="h-5 w-5 text-primary" />
-          <span>info@vmosgamestation.com</span>
+          <span>vmtech.cool@gmail.com</span>
         </a>
         <div className="flex items-start gap-3 text-sm">
           <MapPin className="h-5 w-5 text-primary flex-shrink-0" />
           <span className="text-muted-foreground">
-            123 Gaming Street, Tech Hub,<br />
-            Bangalore, Karnataka 560001
+            5/1, 1st St, Sellam Nagar, Parapalayam,<br />
+            Pirivu, Tiruppur, Andipalayam,<br />
+            Tamil Nadu 641604
           </span>
         </div>
         <div className="flex items-center gap-3 text-sm">
