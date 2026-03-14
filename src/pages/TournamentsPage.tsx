@@ -2,8 +2,23 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { ExternalLink, Users, Trophy, Calendar } from "lucide-react";
 import tournamentPoster from "@/assets/tournament-poster.jpg";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
+
+interface Tournament {
+  id: string;
+  name: string;
+  game: string;
+  date: string;
+  prize: string;
+}
+
+const defaultTournaments: Tournament[] = [
+  { id: "seed-1", name: "VMOS Championship 2025", game: "FIFA 24", date: "2025-02-15", prize: "₹10,000" },
+];
 
 const TournamentsPage = () => {
+  const [tournaments] = useLocalStorage<Tournament[]>("vmos-tournaments", defaultTournaments);
+  const primary = tournaments[0];
   const googleFormUrl = "https://forms.google.com/your-tournament-form";
 
   return (
@@ -34,7 +49,7 @@ const TournamentsPage = () => {
         {/* Tournament Details */}
         <div className="glass-card rounded-xl p-6 mb-6">
           <h2 className="font-heading text-xl font-bold text-primary mb-4">
-            VMOS Championship 2025
+            {primary?.name || "Upcoming Tournament"}
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -42,21 +57,21 @@ const TournamentsPage = () => {
               <Calendar className="h-8 w-8 text-primary" />
               <div>
                 <p className="text-xs text-muted-foreground">Date</p>
-                <p className="font-medium">Feb 15, 2025</p>
+                <p className="font-medium">{primary?.date || "TBD"}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 bg-muted/30 rounded-lg p-3">
               <Users className="h-8 w-8 text-secondary" />
               <div>
-                <p className="text-xs text-muted-foreground">Participants</p>
-                <p className="font-medium">32 Slots</p>
+                <p className="text-xs text-muted-foreground">Game</p>
+                <p className="font-medium">{primary?.game || "TBD"}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 bg-muted/30 rounded-lg p-3">
               <Trophy className="h-8 w-8 text-accent" />
               <div>
                 <p className="text-xs text-muted-foreground">Prize Pool</p>
-                <p className="font-medium">₹10,000</p>
+                <p className="font-medium">{primary?.prize || "TBD"}</p>
               </div>
             </div>
           </div>

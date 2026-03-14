@@ -1,9 +1,9 @@
+/* VMOS Game Station - Mobile First Dark Neon Gaming Theme */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* VMOS Game Station - Mobile First Dark Neon Gaming Theme */
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
 
 /* Smooth scrolling */
 html {
@@ -12,40 +12,34 @@ html {
 
 @layer base {
   :root {
-    /* Dark Gaming Background */
-    --background: 220 25% 6%;
-    --foreground: 210 40% 98%;
+    /* Light theme defaults */
+    --background: 210 40% 96%;
+    --foreground: 220 30% 10%;
 
-    /* Cards with glass effect */
-    --card: 220 20% 10%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 30% 10%;
 
-    --popover: 220 20% 10%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 30% 10%;
 
-    /* Neon Cyan Primary */
-    --primary: 185 100% 50%;
-    --primary-foreground: 220 25% 6%;
+    --primary: 185 80% 40%;
+    --primary-foreground: 210 40% 98%;
 
-    /* Neon Purple Secondary */
-    --secondary: 280 100% 65%;
+    --secondary: 280 80% 50%;
     --secondary-foreground: 210 40% 98%;
 
-    /* Muted for disabled */
-    --muted: 220 15% 18%;
-    --muted-foreground: 220 10% 50%;
+    --muted: 220 15% 90%;
+    --muted-foreground: 220 10% 40%;
 
-    /* Neon Green Accent */
-    --accent: 150 100% 45%;
-    --accent-foreground: 220 25% 6%;
+    --accent: 150 70% 40%;
+    --accent-foreground: 210 40% 98%;
 
-    /* Neon Red Destructive */
-    --destructive: 0 100% 55%;
+    --destructive: 0 80% 50%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 220 15% 20%;
-    --input: 220 15% 15%;
-    --ring: 185 100% 50%;
+    --border: 220 15% 85%;
+    --input: 220 15% 88%;
+    --ring: 185 80% 40%;
 
     --radius: 0.75rem;
 

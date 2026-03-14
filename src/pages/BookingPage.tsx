@@ -1,78 +1,54 @@
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { format } from "date-fns";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { CalendarIcon, History, CreditCard, Banknote } from "lucide-react";
-import { format } from "date-fns";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon, History, CreditCard, Banknote, Radio } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-type SlotStatus = "available" | "booked" | "unavailable";
-
-interface TimeSlot {
-  time: string;
-  status: SlotStatus;
-}
-
-const consoles = [
-  { value: "pc", label: "Gaming PC" },
-  { value: "ps5", label: "PlayStation 5" },
-  { value: "ps4", label: "PlayStation 4" },
-  { value: "ps3", label: "PlayStation 3" },
-  { value: "ps2", label: "PlayStation 2" },
-  { value: "xbox", label: "Xbox Series X" },
-];
-
-// Mock time slots - in production this would come from a backend
-const generateTimeSlots = (): TimeSlot[] => {
-  const slots: TimeSlot[] = [];
-  const statuses: SlotStatus[] = ["available", "booked", "unavailable"];
-  
-  for (let hour = 10; hour <= 22; hour++) {
-    for (const minutes of ["00", "30"]) {
-      const time = `${hour.toString().padStart(2, "0")}:${minutes}`;
-      // Randomize status for demo
-      const randomStatus = statuses[Math.floor(Math.random() * 3)];
-      slots.push({ time, status: randomStatus });
-    }
-  }
-  return slots;
-};
+import { useBooking } from "@/contexts/BookingContext";
 
 const BookingPage = () => {
-  const [selectedConsole, setSelectedConsole] = useState<string>("");
-  const [selectedDate, setSelectedDate] = useState<Date>();
+  const { consoles, getAvailability } = useBooking();
+  const [selectedConsole, setSelectedConsole] = useState<string>(consoles[0]?.id || "");
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
-  const [timeSlots] = useState<TimeSlot[]>(generateTimeSlots());
+  const [timeSlots, setTimeSlots] = useState(() => (selectedConsole ? getAvailability(format(new Date(), "yyyy-MM-dd"), selectedConsole) : []));
+  const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
   const [isLoggedIn] = useState(false); // Mock auth state
 
-  const getStatusStyles = (status: SlotStatus) => {
-    switch (status) {
-      case "available":
-        return "bg-accent/20 border-accent text-accent hover:bg-accent/30 cursor-pointer";
-      case "booked":
-        return "bg-destructive/20 border-destructive text-destructive cursor-not-allowed";
-      case "unavailable":
-        return "bg-muted/50 border-muted text-muted-foreground cursor-not-allowed";
+  const dateString = useMemo(() => format(selectedDate, "yyyy-MM-dd"), [selectedDate]);
+
+  const refreshSlots = useCallback(() => {
+    if (!selectedConsole) return;
+    const slots = getAvailability(dateString, selectedConsole);
+    setTimeSlots(slots);
+    setLastRefreshed(new Date());
+  }, [dateString, getAvailability, selectedConsole]);
+
+  useEffect(() => {
+    refreshSlots();
+  }, [refreshSlots]);
+
+  useEffect(() => {
+    const interval = setInterval(() => refreshSlots(), 30000);
+    return () => clearInterval(interval);
+  }, [refreshSlots]);
+
+  const getStatusStyles = (available: boolean) => {
+    return available
+      ? "bg-accent/20 border-accent text-accent hover:bg-accent/30 cursor-pointer"
+      : "bg-destructive/20 border-destructive text-destructive cursor-not-allowed";
+  };
+
+  const handleSlotClick = (slotId: string, available: boolean) => {
+    if (available) {
+      setSelectedSlot(selectedSlot === slotId ? null : slotId);
     }
   };
 
-  const handleSlotClick = (slot: TimeSlot) => {
-    if (slot.status === "available") {
-      setSelectedSlot(selectedSlot === slot.time ? null : slot.time);
-    }
-  };
+  const selectedConsoleMeta = consoles.find((c) => c.id === selectedConsole);
 
   return (
     <Layout>
@@ -100,14 +76,20 @@ const BookingPage = () => {
           {/* Console Selection */}
           <div>
             <label className="block text-sm font-medium mb-2">Select Console</label>
-            <Select value={selectedConsole} onValueChange={setSelectedConsole}>
+            <Select
+              value={selectedConsole}
+              onValueChange={(val) => {
+                setSelectedConsole(val);
+                setSelectedSlot(null);
+              }}
+            >
               <SelectTrigger className="w-full bg-input border-border">
                 <SelectValue placeholder="Choose a console" />
               </SelectTrigger>
               <SelectContent>
                 {consoles.map((console) => (
-                  <SelectItem key={console.value} value={console.value}>
-                    {console.label}
+                  <SelectItem key={console.id} value={console.id}>
+                    {console.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -144,6 +126,14 @@ const BookingPage = () => {
           </div>
         </div>
 
+        <div className="flex items-center gap-3 text-xs text-muted-foreground mb-4">
+          <span className="inline-flex items-center gap-1 rounded-full bg-green-500/15 text-green-400 px-2 py-1 font-semibold uppercase tracking-wide">Live</span>
+          <span>Last updated {format(lastRefreshed, "hh:mm:ss a")}</span>
+          <Button variant="ghost" size="sm" className="h-8 px-2" onClick={refreshSlots}>
+            <Radio className="h-3 w-3" /> Refresh
+          </Button>
+        </div>
+
         {/* Legend */}
         <div className="flex flex-wrap gap-4 mb-6">
           <div className="flex items-center gap-2">
@@ -168,23 +158,23 @@ const BookingPage = () => {
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
             {timeSlots.map((slot) => (
               <button
-                key={slot.time}
-                onClick={() => handleSlotClick(slot)}
-                disabled={slot.status !== "available"}
+                key={slot.id}
+                onClick={() => handleSlotClick(slot.id, slot.available)}
+                disabled={!slot.available}
                 className={cn(
                   "py-3 px-2 rounded-lg border text-sm font-medium transition-all duration-200",
-                  getStatusStyles(slot.status),
-                  selectedSlot === slot.time && "ring-2 ring-primary ring-offset-2 ring-offset-background"
+                  getStatusStyles(slot.available),
+                  selectedSlot === slot.id && "ring-2 ring-primary ring-offset-2 ring-offset-background"
                 )}
               >
-                {slot.time}
+                {slot.start} - {slot.end}
               </button>
             ))}
           </div>
         </div>
 
         {/* Booking Summary & Payment */}
-        {selectedSlot && selectedConsole && selectedDate && (
+        {selectedSlot && selectedConsoleMeta && selectedDate && (
           <div className="glass-card rounded-xl p-4">
             <h2 className="font-heading text-lg font-semibold mb-4">
               Booking Summary
@@ -192,7 +182,7 @@ const BookingPage = () => {
             <div className="space-y-2 mb-6 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Console:</span>
-                <span>{consoles.find(c => c.value === selectedConsole)?.label}</span>
+                <span>{selectedConsoleMeta.name}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Date:</span>
@@ -200,11 +190,13 @@ const BookingPage = () => {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Time:</span>
-                <span>{selectedSlot}</span>
+                <span>
+                  {timeSlots.find((s) => s.id === selectedSlot)?.start} - {timeSlots.find((s) => s.id === selectedSlot)?.end}
+                </span>
               </div>
               <div className="flex justify-between font-semibold text-primary pt-2 border-t border-border">
                 <span>Price (1 hour):</span>
-                <span>₹100</span>
+                <span>₹{selectedConsoleMeta.price}</span>
               </div>
             </div>
 

@@ -1,6 +1,7 @@
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart } from "lucide-react";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 interface Product {
   id: string;
@@ -10,7 +11,7 @@ interface Product {
   category: string;
 }
 
-const products: Product[] = [
+const defaultProducts: Product[] = [
   {
     id: "1",
     name: "GTA V",
@@ -70,6 +71,8 @@ const products: Product[] = [
 ];
 
 const ShopPage = () => {
+  const [products] = useLocalStorage<Product[]>("vmos-products", defaultProducts);
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">

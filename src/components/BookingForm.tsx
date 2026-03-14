@@ -1,37 +1,9 @@
-import { useState } from 'react';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Calendar, Clock, Gamepad2, User, Phone, CreditCard, CheckCircle2, Home } from 'lucide-react';
-
-// Console/PC types with hourly pricing
-const CONSOLE_TYPES = [
-  { id: 'ps5', name: 'PlayStation 5', price: 100, icon: '🎮' },
-  { id: 'ps4', name: 'PlayStation 4', price: 80, icon: '🎮' },
-  { id: 'xbox', name: 'Xbox Series X', price: 100, icon: '🎮' },
-  { id: 'pc-high', name: 'High-End PC', price: 80, icon: '💻' },
-  { id: 'pc-mid', name: 'Mid-Range PC', price: 60, icon: '💻' },
-  { id: 'switch', name: 'Nintendo Switch', price: 60, icon: '🕹️' },
-  { id: 'vr', name: 'VR Gaming', price: 150, icon: '🥽' },
-];
-
-// Generate time slots from 8 AM to 10 PM (1-hour intervals)
-const generateTimeSlots = () => {
-  const slots = [];
-  for (let hour = 8; hour < 22; hour++) {
-    const startTime = `${hour > 12 ? hour - 12 : hour}:00 ${hour >= 12 ? 'PM' : 'AM'}`;
-    const endHour = hour + 1;
-    const endTime = `${endHour > 12 ? endHour - 12 : endHour}:00 ${endHour >= 12 ? 'PM' : 'AM'}`;
-    slots.push({
-      id: `slot-${hour}`,
-      start: startTime,
-      end: endTime,
-      hour: hour,
-      available: Math.random() > 0.3, // Randomly mark some as booked for demo
-    });
-  }
-  return slots;
-};
+import { useEffect, useMemo, useState } from "react";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { useBooking } from "@/contexts/BookingContext";
+import { Calendar, Clock, Gamepad2, User, Phone, CreditCard, CheckCircle2, Home, MessageSquare } from "lucide-react";
 
 interface BookingData {
   name: string;
@@ -43,25 +15,31 @@ interface BookingData {
 }
 
 export default function BookingForm() {
+  const { consoles, getAvailability, addBooking } = useBooking();
   const [step, setStep] = useState(1); // 1: Details, 2: Console, 3: Slot, 4: Payment
   const [formData, setFormData] = useState<BookingData>({
-    name: '',
-    phone: '',
-    console: '',
+    name: "",
+    phone: "",
+    console: consoles[0]?.id || "",
     slots: [],
-    date: new Date().toISOString().split('T')[0],
+    date: new Date().toISOString().split("T")[0],
     amount: 0,
   });
-  const [timeSlots, setTimeSlots] = useState(generateTimeSlots());
+  const [timeSlots, setTimeSlots] = useState(() => (consoles[0] ? getAvailability(new Date().toISOString().split("T")[0], consoles[0].id) : []));
 
-  const selectedConsole = CONSOLE_TYPES.find(c => c.id === formData.console);
+  useEffect(() => {
+    if (!formData.console) return;
+    const slots = getAvailability(formData.date, formData.console);
+    setTimeSlots(slots);
+    // Reset selections on console/date change
+    setFormData((prev) => ({ ...prev, slots: [], amount: 0 }));
+  }, [formData.console, formData.date, getAvailability]);
+
+  const selectedConsole = useMemo(() => consoles.find((c) => c.id === formData.console), [consoles, formData.console]);
   const selectedSlots = timeSlots.filter(s => formData.slots.includes(s.id));
 
   const handleConsoleSelect = (consoleId: string) => {
-    const console = CONSOLE_TYPES.find(c => c.id === consoleId);
     setFormData({ ...formData, console: consoleId, amount: 0, slots: [] });
-    // Regenerate slots for demo (in real app, fetch from backend)
-    setTimeSlots(generateTimeSlots());
   };
 
   const handleSlotSelect = (slotId: string) => {
@@ -81,8 +59,32 @@ export default function BookingForm() {
     setFormData({ ...formData, slots: newSlots, amount: totalAmount });
   };
 
+  const handleConfirm = () => {
+    if (!formData.name || !formData.phone || !formData.console || formData.slots.length === 0) return;
+    const slots = timeSlots.filter((s) => formData.slots.includes(s.id)).map((s) => ({ ...s, available: false }));
+    const booking = addBooking({
+      name: formData.name,
+      phone: formData.phone,
+      consoleId: formData.console,
+      date: formData.date,
+      slots,
+    });
+
+    const waText = encodeURIComponent(
+      `Hi VMOS, I'd like to confirm my booking:\n` +
+        `Name: ${booking.name}\n` +
+        `Phone: ${booking.phone}\n` +
+        `Console: ${booking.consoleName}\n` +
+        `Date: ${booking.date}\n` +
+        `Time: ${booking.slots.map((s) => `${s.start}-${s.end}`).join(", ")}\n` +
+        `Amount: ₹${booking.amount}`
+    );
+    window.open(`https://wa.me/917010905241?text=${waText}`, "_blank");
+    setStep(5);
+  };
+
   const handleGoHome = () => {
-    window.location.href = '/';
+    window.location.href = "/";
   };
 
   return (
@@ -118,7 +120,7 @@ export default function BookingForm() {
       </div>
 
       {/* Step 1: User Details */}
-      {step === 1 && (
+          {step === 1 && (
         <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4">
           <h3 className="text-xl font-bold mb-4">Your Details</h3>
           
@@ -178,12 +180,12 @@ export default function BookingForm() {
       )}
 
       {/* Step 2: Console Selection */}
-      {step === 2 && (
+          {step === 2 && (
         <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
           <h3 className="text-xl font-bold mb-4">Select Console/PC</h3>
           
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
-            {CONSOLE_TYPES.map((console) => (
+            {consoles.map((console) => (
               <button
                 key={console.id}
                 onClick={() => handleConsoleSelect(console.id)}
@@ -220,7 +222,7 @@ export default function BookingForm() {
       )}
 
       {/* Step 3: Time Slot Selection */}
-      {step === 3 && (
+          {step === 3 && (
         <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -304,7 +306,7 @@ export default function BookingForm() {
       )}
 
       {/* Step 4: Payment Summary */}
-      {step === 4 && (
+          {step === 4 && (
         <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
           <h3 className="text-xl font-bold mb-6">Booking Summary</h3>
           
@@ -376,11 +378,12 @@ export default function BookingForm() {
               Back
             </Button>
             <Button
-              onClick={() => setStep(5)}
+              onClick={handleConfirm}
               className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold py-6 rounded-xl"
+              disabled={formData.slots.length === 0}
             >
-              <CreditCard className="h-5 w-5 mr-2" />
-              Continue to Payment
+              <MessageSquare className="h-5 w-5 mr-2" />
+              Confirm & WhatsApp
             </Button>
           </div>
         </div>
@@ -396,9 +399,9 @@ export default function BookingForm() {
             </div>
 
             {/* Title */}
-            <h3 className="text-2xl font-bold mb-3">Payment Gateway</h3>
+            <h3 className="text-2xl font-bold mb-3">Booking Confirmed</h3>
             <p className="text-white/70 mb-8">
-              Payment integration coming soon! Our secure payment gateway will be added here.
+              We opened WhatsApp with your booking summary. Our team will reply to confirm shortly.
             </p>
 
             {/* Booking Summary Quick View */}
@@ -430,7 +433,7 @@ export default function BookingForm() {
             </Button>
 
             <p className="text-xs text-white/50 mt-4">
-              Payment gateway integration will be added soon
+              Need help? Message us on WhatsApp anytime.
             </p>
           </div>
         </div>
