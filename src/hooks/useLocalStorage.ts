@@ -1,38 +1,34 @@
-import { useCallback, useEffect, useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
-// Simple typed wrapper around localStorage with JSON serialization.
-export function useLocalStorage<T>(key: string, defaultValue: T) {
-  const [value, setValue] = useState<T>(defaultValue);
+export function useLocalStorage<T>(
+  key: string,
+  initialValue: T
+): [T, (value: T | ((prev: T) => T)) => void] {
+  const keyRef = useRef(key);
+
+  const [storedValue, setStoredValue] = useState<T>(() => {
+    try {
+      const item = window.localStorage.getItem(key);
+      return item ? (JSON.parse(item) as T) : initialValue;
+    } catch {
+      return initialValue;
+    }
+  });
 
   useEffect(() => {
     try {
-      const raw = window.localStorage.getItem(key);
-      if (raw !== null) {
-        setValue(JSON.parse(raw) as T);
-      } else {
-        window.localStorage.setItem(key, JSON.stringify(defaultValue));
-      }
-    } catch (error) {
-      console.error("useLocalStorage read error", error);
-      setValue(defaultValue);
+      window.localStorage.setItem(keyRef.current, JSON.stringify(storedValue));
+    } catch {
+      // Storage full or unavailable
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
+  }, [storedValue]);
 
-  const update = useCallback(
-    (next: T | ((prev: T) => T)) => {
-      setValue((prev) => {
-        const resolved = typeof next === "function" ? (next as (p: T) => T)(prev) : next;
-        try {
-          window.localStorage.setItem(key, JSON.stringify(resolved));
-        } catch (error) {
-          console.error("useLocalStorage write error", error);
-        }
-        return resolved;
-      });
-    },
-    [key]
-  );
+  const setValue = useCallback((value: T | ((prev: T) => T)) => {
+    setStoredValue((prev) => {
+      const nextValue = value instanceof Function ? value(prev) : value;
+      return nextValue;
+    });
+  }, []);
 
-  return [value, update] as const;
+  return [storedValue, setValue];
 }

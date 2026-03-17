@@ -1,5 +1,18 @@
-/* VMOS Game Station - Mobile First Dark Neon Gaming Theme */
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
+/* VMOS Game Station — Production-Grade Dark Gaming Theme */
+/* Self-hosted fonts (no Google CDN dependency) */
+@import '@fontsource/rajdhani/400.css';
+@import '@fontsource/rajdhani/500.css';
+@import '@fontsource/rajdhani/600.css';
+@import '@fontsource/rajdhani/700.css';
+@import '@fontsource/exo-2/400.css';
+@import '@fontsource/exo-2/500.css';
+@import '@fontsource/exo-2/600.css';
+@import '@fontsource/exo-2/700.css';
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
 
 @tailwind base;
 @tailwind components;
@@ -11,90 +24,81 @@ html {
 }
 
 @layer base {
+  /* Dark-only theme — unified color token system */
   :root {
-    /* Light theme defaults */
-    --background: 210 40% 96%;
-    --foreground: 220 30% 10%;
+    /* Brand Colors (refined for WCAG AA compliance) */
+    --brand-primary: 185 85% 48%;
+    --brand-secondary: 270 75% 55%;
+    --brand-accent: 155 70% 45%;
+    --brand-gold: 45 90% 55%;
+    --brand-danger: 0 75% 50%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 220 30% 10%;
+    /* Surfaces (layered elevation system) */
+    --surface-0: 222 30% 5%;
+    --surface-1: 222 28% 7%;
+    --surface-2: 222 22% 11%;
+    --surface-3: 222 18% 16%;
+    --surface-4: 222 15% 22%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 30% 10%;
+    /* Semantic Tokens (mapped to shadcn/ui expectations) */
+    --background: var(--surface-1);
+    --foreground: 210 40% 98%;
 
-    --primary: 185 80% 40%;
-    --primary-foreground: 210 40% 98%;
+    --card: var(--surface-2);
+    --card-foreground: 210 40% 98%;
 
-    --secondary: 280 80% 50%;
+    --popover: var(--surface-2);
+    --popover-foreground: 210 40% 98%;
+
+    --primary: var(--brand-primary);
+    --primary-foreground: 222 28% 7%;
+
+    --secondary: var(--brand-secondary);
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 220 15% 90%;
-    --muted-foreground: 220 10% 40%;
+    --muted: 222 15% 18%;
+    --muted-foreground: 220 10% 55%;
 
-    --accent: 150 70% 40%;
-    --accent-foreground: 210 40% 98%;
+    --accent: var(--brand-accent);
+    --accent-foreground: 222 28% 7%;
 
-    --destructive: 0 80% 50%;
+    --destructive: var(--brand-danger);
     --destructive-foreground: 210 40% 98%;
 
-    --border: 220 15% 85%;
-    --input: 220 15% 88%;
-    --ring: 185 80% 40%;
+    --border: 222 15% 20%;
+    --input: 222 15% 15%;
+    --ring: var(--brand-primary);
 
     --radius: 0.75rem;
 
-    /* Custom Gaming Colors */
+    /* Neon Glow System */
     --neon-cyan: 185 100% 50%;
     --neon-green: 150 100% 45%;
-    --neon-purple: 280 100% 65%;
+    --neon-purple: 270 100% 65%;
     --neon-pink: 320 100% 60%;
     --neon-red: 0 100% 55%;
     --neon-orange: 25 100% 55%;
 
+    /* Computed Glow Presets */
+    --glow-primary: 0 0 20px hsl(var(--brand-primary) / 0.4), 0 0 40px hsl(var(--brand-primary) / 0.15);
+    --glow-secondary: 0 0 20px hsl(var(--brand-secondary) / 0.4), 0 0 40px hsl(var(--brand-secondary) / 0.15);
+    --glow-accent: 0 0 20px hsl(var(--brand-accent) / 0.4);
+    --glow-gold: 0 0 20px hsl(var(--brand-gold) / 0.4);
+
     /* Slot Status Colors */
-    --slot-available: 150 100% 45%;
-    --slot-booked: 0 100% 55%;
+    --slot-available: var(--brand-accent);
+    --slot-booked: var(--brand-danger);
     --slot-unavailable: 220 10% 35%;
 
-    /* Gradients */
-    --gradient-neon: linear-gradient(135deg, hsl(185 100% 50%), hsl(280 100% 65%));
-    --gradient-dark: linear-gradient(180deg, hsl(220 25% 8%), hsl(220 25% 4%));
-
-    /* Glow Effects */
-    --glow-cyan: 0 0 20px hsl(185 100% 50% / 0.5);
-    --glow-green: 0 0 20px hsl(150 100% 45% / 0.5);
-    --glow-purple: 0 0 20px hsl(280 100% 65% / 0.5);
-
-    --sidebar-background: 220 25% 6%;
+    /* Sidebar */
+    --sidebar-background: var(--surface-0);
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 185 100% 50%;
-    --sidebar-primary-foreground: 220 25% 6%;
-    --sidebar-accent: 220 20% 15%;
+    --sidebar-primary: var(--brand-primary);
+    --sidebar-primary-foreground: 222 28% 7%;
+    --sidebar-accent: var(--surface-3);
     --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 220 15% 20%;
-    --sidebar-ring: 185 100% 50%;
-  }
-
-  .dark {
-    --background: 220 25% 6%;
-    --foreground: 210 40% 98%;
-    --card: 220 20% 10%;
-    --card-foreground: 210 40% 98%;
-    --popover: 220 20% 10%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 185 100% 50%;
-    --primary-foreground: 220 25% 6%;
-    --secondary: 280 100% 65%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 220 15% 18%;
-    --muted-foreground: 220 10% 50%;
-    --accent: 150 100% 45%;
-    --accent-foreground: 220 25% 6%;
-    --destructive: 0 100% 55%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 220 15% 20%;
-    --input: 220 15% 15%;
-    --ring: 185 100% 50%;
+    --sidebar-border: 222 15% 20%;
+    --sidebar-ring: var(--brand-primary);
   }
 }
 
@@ -104,48 +108,91 @@ html {
   }
 
   body {
-    @apply bg-background text-foreground font-body antialiased;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-heading;
+  /* Display headings — Rajdhani: bold, futuristic, readable */
+  h1 {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  /* Section headings — Exo 2: sci-fi with excellent readability */
+  h2, h3, h4, h5, h6 {
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 600;
   }
 }
 
 @layer utilities {
+  /* Font family utilities */
+  .font-display {
+    font-family: 'Rajdhani', sans-serif;
+  }
+
   .font-heading {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Exo 2', sans-serif;
   }
 
   .font-body {
     font-family: 'Inter', sans-serif;
   }
 
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Neon Glow Effects */
   .neon-glow {
-    box-shadow: var(--glow-cyan);
+    box-shadow: var(--glow-primary);
   }
 
-  .neon-glow-green {
-    box-shadow: var(--glow-green);
+  .neon-glow-secondary {
+    box-shadow: var(--glow-secondary);
   }
 
-  .neon-glow-purple {
-    box-shadow: var(--glow-purple);
+  .neon-glow-accent {
+    box-shadow: var(--glow-accent);
   }
 
+  .neon-glow-gold {
+    box-shadow: var(--glow-gold);
+  }
+
+  /* Glass morphism card */
   .glass-card {
     @apply bg-card/80 backdrop-blur-md border border-border/50;
   }
 
+  .glass-card-elevated {
+    background: hsl(var(--surface-3) / 0.6);
+    backdrop-filter: blur(16px);
+    border: 1px solid hsl(var(--border) / 0.5);
+  }
+
+  /* Neon border */
   .neon-border {
     @apply border border-primary/50;
   }
 
+  /* Text gradient */
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary;
   }
 
+  .text-gradient-gold {
+    background: linear-gradient(135deg, hsl(45 90% 55%), hsl(35 90% 50%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Neon button effect */
   .btn-neon {
     @apply relative overflow-hidden transition-all duration-300;
   }
@@ -159,6 +206,7 @@ html {
     @apply opacity-100;
   }
 
+  /* Slot status styles */
   .slot-available {
     @apply bg-accent/20 border-accent text-accent;
   }
@@ -171,7 +219,7 @@ html {
     @apply bg-muted/50 border-muted text-muted-foreground;
   }
 
-  /* Custom animations */
+  /* Animations */
   @keyframes float {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-10px); }
@@ -196,7 +244,64 @@ html {
     animation: fade-in-up 0.3s ease-out forwards;
   }
 
-  /* Hide scrollbar but keep functionality */
+  @keyframes glitch {
+    0% { transform: translate(0); }
+    20% { transform: translate(-2px, 2px); }
+    40% { transform: translate(-2px, -2px); }
+    60% { transform: translate(2px, 2px); }
+    80% { transform: translate(2px, -2px); }
+    100% { transform: translate(0); }
+  }
+
+  .animate-glitch {
+    animation: glitch 0.3s ease-in-out;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 20px hsl(var(--brand-primary) / 0.3);
+    }
+    50% {
+      box-shadow: 0 0 30px hsl(var(--brand-primary) / 0.6), 0 0 60px hsl(var(--brand-primary) / 0.2);
+    }
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  .animate-shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--surface-2)) 0%,
+      hsl(var(--surface-3)) 50%,
+      hsl(var(--surface-2)) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+
+  @keyframes slide-up-enter {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-slide-up {
+    animation: slide-up-enter 0.4s ease-out forwards;
+  }
+
+  /* Scrollbar customization */
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -204,6 +309,25 @@ html {
 
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Thin styled scrollbar for desktop */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--surface-4)) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--surface-4));
+    border-radius: 3px;
   }
 
   /* Safe area for iOS */
@@ -219,5 +343,21 @@ html {
   .touch-feedback:active {
     opacity: 0.7;
     transform: scale(0.98);
+  }
+
+  /* Card hover lift effect */
+  .hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px hsl(var(--surface-0) / 0.5);
+  }
+
+  /* Stat/price monospace styling */
+  .stat-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
   }
 }
