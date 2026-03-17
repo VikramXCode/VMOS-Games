@@ -2,11 +2,15 @@ import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAdmin } from "@/contexts/AdminContext";
 
 export const AdminGuard = () => {
-  const { isAuthenticated } = useAdmin();
+  const { isAuthenticated, isLoading } = useAdmin();
   const location = useLocation();
 
+  if (isLoading) {
+    return null;
+  }
+
   if (!isAuthenticated) {
-    return <Navigate to="/admindashboard" state={{ from: location.pathname }} replace />;
+    return <Navigate to="/admin" state={{ from: location.pathname }} replace />;
   }
 
   return <Outlet />;

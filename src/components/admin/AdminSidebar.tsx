@@ -16,13 +16,13 @@ import {
 import { cn } from "@/lib/utils";
 
 const links = [
-  { to: "/admindashboard/overview", label: "Overview", icon: LayoutGrid },
-  { to: "/admindashboard/bookings", label: "Bookings", icon: BookOpenCheck },
-  { to: "/admindashboard/slots", label: "Slots", icon: CalendarRange },
-  { to: "/admindashboard/tournaments", label: "Tournaments", icon: Trophy },
-  { to: "/admindashboard/products", label: "Products", icon: ShoppingBag },
-  { to: "/admindashboard/customers", label: "Customers", icon: Users },
-  { to: "/admindashboard/insights", label: "AI Insights", icon: Lightbulb },
+  { to: "/admin/overview", label: "Overview", icon: LayoutGrid },
+  { to: "/admin/bookings", label: "Bookings", icon: BookOpenCheck },
+  { to: "/admin/slots", label: "Slots", icon: CalendarRange },
+  { to: "/admin/tournaments", label: "Tournaments", icon: Trophy },
+  { to: "/admin/products", label: "Products", icon: ShoppingBag },
+  { to: "/admin/customers", label: "Customers", icon: Users },
+  { to: "/admin/insights", label: "AI Insights", icon: Lightbulb },
 ];
 
 export const AdminSidebar = () => {
@@ -69,7 +69,7 @@ export const AdminSidebar = () => {
           className="w-full justify-start gap-2"
           onClick={() => {
             logout();
-            navigate("/admindashboard");
+            navigate("/admin");
           }}
         >
           <LogOut className="h-4 w-4" />

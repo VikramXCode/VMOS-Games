@@ -1,50 +1,102 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { api } from "@/lib/api";
 
 interface Product {
   id: string;
   name: string;
   price: number;
   image: string;
+  imagePublicId?: string;
   category: string;
 }
 
-const defaultProducts: Product[] = [
-  {
-    id: "1",
-    name: "GTA V",
-    price: 2499,
-    image: "https://images.unsplash.com/photo-1612287230202-1ff1d85d1bdf?w=400&h=400&fit=crop",
-    category: "Games",
-  },
-  {
-    id: "2",
-    name: "Red Dead Redemption 2",
-    price: 2999,
-    image: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&h=400&fit=crop",
-    category: "Games",
-  },
-  {
-    id: "3",
-    name: "PS5 DualSense Controller",
-    price: 5999,
-    image: "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=400&h=400&fit=crop",
-    category: "Accessories",
-  },
-];
+const mapProduct = (raw: any): Product => ({
+  id: raw._id || raw.id,
+  name: raw.name,
+  price: Number(raw.price) || 0,
+  image: raw.image,
+  imagePublicId: raw.imagePublicId,
+  category: raw.category,
+});
 
 export const AdminProductsPage = () => {
-  const [products, setProducts] = useLocalStorage<Product[]>("vmos-products", defaultProducts);
-  const [form, setForm] = useState<Omit<Product, "id">>({ name: "", price: 0, image: "", category: "" });
+  const [products, setProducts] = useState<Product[]>([]);
+  const [form, setForm] = useState({ name: "", price: 0, category: "" });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [removeId, setRemoveId] = useState<string | null>(null);
 
-  const addProduct = () => {
-    setProducts((prev) => [{ id: crypto.randomUUID(), ...form }, ...prev]);
-    setForm({ name: "", price: 0, image: "", category: "" });
+  const previewUrl = useMemo(() => {
+    if (!imageFile) return "";
+    return URL.createObjectURL(imageFile);
+  }, [imageFile]);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
+  const loadProducts = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await api.products.list();
+      setProducts(data.map(mapProduct));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load products");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadProducts();
+  }, []);
+
+  const addProduct = async () => {
+    if (!form.name || !form.price || !form.category || !imageFile) return;
+
+    setIsSaving(true);
+    setError(null);
+    try {
+      const uploaded = await api.products.uploadImage(imageFile);
+      const created = await api.products.create({
+        name: form.name,
+        price: form.price,
+        category: form.category,
+        image: uploaded.url,
+        imagePublicId: uploaded.publicId,
+      });
+
+      setProducts((prev) => [mapProduct(created), ...prev]);
+      setForm({ name: "", price: 0, category: "" });
+      setImageFile(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to create product");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const removeProduct = async (id: string) => {
+    setRemoveId(id);
+    setError(null);
+    try {
+      await api.products.delete(id);
+      setProducts((prev) => prev.filter((item) => item.id !== id));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to remove product");
+    } finally {
+      setRemoveId(null);
+    }
   };
 
   return (
@@ -68,16 +120,24 @@ export const AdminProductsPage = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label>Image URL</Label>
-              <Input value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} />
+              <Label>Product Image</Label>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+              />
+              {previewUrl && (
+                <img src={previewUrl} alt="Preview" className="rounded-md h-24 object-cover w-full" />
+              )}
             </div>
             <div className="space-y-2">
               <Label>Category</Label>
               <Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
             </div>
-            <Button onClick={addProduct} disabled={!form.name || !form.price}>
-              Add Product
+            <Button onClick={addProduct} disabled={!form.name || !form.price || !form.category || !imageFile || isSaving}>
+              {isSaving ? "Saving..." : "Add Product"}
             </Button>
+            {error && <p className="text-sm text-destructive">{error}</p>}
           </CardContent>
         </Card>
 
@@ -86,6 +146,7 @@ export const AdminProductsPage = () => {
             <CardTitle>Products</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {isLoading && <p className="text-sm text-muted-foreground">Loading products...</p>}
             {products.length === 0 && <p className="text-sm text-muted-foreground">No products yet.</p>}
             {products.map((p) => (
               <div key={p.id} className="border border-border/60 rounded-lg p-3 space-y-2">
@@ -98,9 +159,10 @@ export const AdminProductsPage = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setProducts((prev) => prev.filter((x) => x.id !== p.id))}
+                  disabled={removeId === p.id}
+                  onClick={() => void removeProduct(p.id)}
                 >
-                  Remove
+                  {removeId === p.id ? "Removing..." : "Remove"}
                 </Button>
               </div>
             ))}

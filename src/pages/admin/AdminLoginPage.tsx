@@ -11,14 +11,17 @@ export const AdminLoginPage = () => {
   const { login } = useAdmin();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as { from?: string } | undefined)?.from || "/admindashboard/overview";
+  const from = (location.state as { from?: string } | undefined)?.from || "/admin/overview";
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const ok = login(username, password);
+    setLoading(true);
+    const ok = await login(username, password);
+    setLoading(false);
     if (ok) {
       navigate(from, { replace: true });
     } else {
@@ -60,7 +63,9 @@ export const AdminLoginPage = () => {
               />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="w-full">Sign in</Button>
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Signing in..." : "Sign in"}
+            </Button>
           </form>
         </CardContent>
       </Card>

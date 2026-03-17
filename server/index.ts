@@ -1,0 +1,49 @@
+import express from "express";
+import cors from "cors";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+import { productRoutes } from "./routes/products";
+import { bookingRoutes } from "./routes/bookings";
+import { tournamentRoutes } from "./routes/tournaments";
+import { leaderboardRoutes } from "./routes/leaderboard";
+import { adminRoutes } from "./routes/admin";
+import { slotRoutes } from "./routes/slots";
+
+dotenv.config();
+
+const app = express();
+const PORT = process.env.PORT || 3001;
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/vmos";
+
+// Middleware
+app.use(cors({ origin: ["http://localhost:5173", "http://localhost:8080"], credentials: true }));
+app.use(express.json());
+
+// Routes
+app.use("/api/products", productRoutes);
+app.use("/api/bookings", bookingRoutes);
+app.use("/api/tournaments", tournamentRoutes);
+app.use("/api/leaderboard", leaderboardRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/slots", slotRoutes);
+
+// Health check
+app.get("/api/health", (_req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+// Connect to MongoDB & start server
+mongoose
+  .connect(MONGODB_URI)
+  .then(() => {
+    console.log("✅ Connected to MongoDB");
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on http://localhost:${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("❌ MongoDB connection error:", err);
+    process.exit(1);
+  });
+
+export default app;
