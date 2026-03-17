@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { api } from "@/lib/api";
 import { Plus } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
@@ -13,17 +13,61 @@ interface Tournament {
   name: string;
   game: string;
   date: string;
-  prize: string;
+  time: string;
+  entryFee: number;
+  prizePool: number;
+  maxSlots: number;
+  filledSlots: number;
+  status: "upcoming" | "live" | "completed";
 }
 
-const defaultTournaments: Tournament[] = [
-  { id: "seed-1", name: "VMOS Championship 2025", game: "FIFA 24", date: "2025-02-15", prize: "₹10,000" },
-];
+const mapTournament = (raw: any): Tournament => ({
+  id: raw._id || raw.id,
+  name: raw.name,
+  game: raw.game,
+  date: raw.date,
+  time: raw.time,
+  entryFee: Number(raw.entryFee) || 0,
+  prizePool: Number(raw.prizePool) || 0,
+  maxSlots: Number(raw.maxSlots) || 0,
+  filledSlots: Number(raw.filledSlots) || 0,
+  status: raw.status || "upcoming",
+});
 
 export const AdminTournamentsPage = () => {
-  const [tournaments, setTournaments] = useLocalStorage<Tournament[]>("vmos-tournaments", defaultTournaments);
-  const [form, setForm] = useState<Omit<Tournament, "id">>({ name: "", game: "", date: "", prize: "" });
+  const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const [form, setForm] = useState({
+    name: "",
+    game: "",
+    date: "",
+    time: "18:00",
+    entryFee: 0,
+    prizePool: 0,
+    maxSlots: 16,
+    status: "upcoming" as "upcoming" | "live" | "completed",
+  });
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [removeId, setRemoveId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadTournaments = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await api.tournaments.list();
+      setTournaments(data.map(mapTournament));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load tournaments");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadTournaments();
+  }, []);
 
   useEffect(() => {
     const openSheet = () => setSheetOpen(true);
@@ -31,10 +75,54 @@ export const AdminTournamentsPage = () => {
     return () => window.removeEventListener("admin-primary-action", openSheet);
   }, []);
 
-  const addTournament = () => {
-    setTournaments((prev) => [{ id: crypto.randomUUID(), ...form }, ...prev]);
-    setForm({ name: "", game: "", date: "", prize: "" });
-    setSheetOpen(false);
+  const addTournament = async () => {
+    if (!form.name || !form.game || !form.date || !form.time || !form.maxSlots) return;
+
+    setIsSaving(true);
+    setError(null);
+    try {
+      const created = await api.tournaments.create({
+        name: form.name,
+        game: form.game,
+        date: form.date,
+        time: form.time,
+        entryFee: form.entryFee,
+        prizePool: form.prizePool,
+        maxSlots: form.maxSlots,
+        filledSlots: 0,
+        status: form.status,
+      });
+
+      setTournaments((prev) => [mapTournament(created), ...prev]);
+      setForm({
+        name: "",
+        game: "",
+        date: "",
+        time: "18:00",
+        entryFee: 0,
+        prizePool: 0,
+        maxSlots: 16,
+        status: "upcoming",
+      });
+      setSheetOpen(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to create tournament");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const removeTournament = async (id: string) => {
+    setRemoveId(id);
+    setError(null);
+    try {
+      await api.tournaments.delete(id);
+      setTournaments((prev) => prev.filter((item) => item.id !== id));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to delete tournament");
+    } finally {
+      setRemoveId(null);
+    }
   };
 
   return (
@@ -48,19 +136,33 @@ export const AdminTournamentsPage = () => {
             <CardTitle>Existing Tournaments</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
+            {isLoading && (
+              <div className="space-y-2">
+                <div className="h-16 rounded-xl animate-shimmer" />
+                <div className="h-16 rounded-xl animate-shimmer" />
+              </div>
+            )}
             {tournaments.length === 0 && <p className="text-sm text-muted-foreground">No tournaments yet.</p>}
             {tournaments.map((t) => (
               <div key={t.id} className="border border-border/60 rounded-2xl p-3 flex items-center justify-between bg-background/30">
                 <div>
                   <p className="font-semibold">{t.name}</p>
-                  <p className="text-xs text-muted-foreground">{t.game} • {t.date}</p>
-                  <p className="text-xs text-primary">Prize: {t.prize || "TBD"}</p>
+                  <p className="text-xs text-muted-foreground">{t.game} • {t.date} • {t.time}</p>
+                  <p className="text-xs text-primary">Prize: ₹{t.prizePool.toLocaleString()} • Entry: ₹{t.entryFee.toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground capitalize">Status: {t.status} • Slots: {t.filledSlots}/{t.maxSlots}</p>
                 </div>
-                <Button variant="destructive" size="sm" className="rounded-xl" onClick={() => setTournaments((prev) => prev.filter((x) => x.id !== t.id))}>
-                  Delete
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="rounded-xl"
+                  disabled={removeId === t.id}
+                  onClick={() => void removeTournament(t.id)}
+                >
+                  {removeId === t.id ? "Deleting..." : "Delete"}
                 </Button>
               </div>
             ))}
+            {error && <p className="text-sm text-destructive">{error}</p>}
           </CardContent>
       </Card>
 
@@ -84,12 +186,57 @@ export const AdminTournamentsPage = () => {
               <Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="rounded-xl h-11" />
             </div>
             <div className="space-y-2">
-              <Label>Prize Pool</Label>
-              <Input value={form.prize} onChange={(e) => setForm({ ...form, prize: e.target.value })} className="rounded-xl h-11" />
+              <Label>Time</Label>
+              <Input type="time" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} className="rounded-xl h-11" />
             </div>
-            <Button onClick={addTournament} disabled={!form.name || !form.game || !form.date} className="w-full rounded-xl h-11">
-              Save Tournament
+            <div className="space-y-2">
+              <Label>Prize Pool</Label>
+              <Input
+                type="number"
+                value={form.prizePool}
+                onChange={(e) => setForm({ ...form, prizePool: Number(e.target.value) })}
+                className="rounded-xl h-11"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Entry Fee</Label>
+              <Input
+                type="number"
+                value={form.entryFee}
+                onChange={(e) => setForm({ ...form, entryFee: Number(e.target.value) })}
+                className="rounded-xl h-11"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Max Slots</Label>
+              <Input
+                type="number"
+                min={2}
+                value={form.maxSlots}
+                onChange={(e) => setForm({ ...form, maxSlots: Number(e.target.value) })}
+                className="rounded-xl h-11"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Status</Label>
+              <select
+                value={form.status}
+                onChange={(e) => setForm({ ...form, status: e.target.value as "upcoming" | "live" | "completed" })}
+                className="w-full rounded-xl h-11 bg-background border border-border px-3 text-sm"
+              >
+                <option value="upcoming">Upcoming</option>
+                <option value="live">Live</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+            <Button
+              onClick={() => void addTournament()}
+              disabled={!form.name || !form.game || !form.date || !form.time || !form.maxSlots || isSaving}
+              className="w-full rounded-xl h-11"
+            >
+              {isSaving ? "Saving..." : "Save Tournament"}
             </Button>
+            {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
         </SheetContent>
       </Sheet>
