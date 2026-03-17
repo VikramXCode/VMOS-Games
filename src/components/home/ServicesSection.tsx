@@ -50,7 +50,7 @@ export const ServicesSection = () => {
             <div
               key={index}
               className={cn(
-                "group aspect-square p-5 rounded-2xl bg-surface-2 border border-border/50 hover:border-primary/30 transition-all duration-300 hover-lift cursor-default flex flex-col"
+                "group aspect-square lg:aspect-auto p-5 rounded-2xl bg-surface-2 border border-border/50 hover:border-primary/30 transition-all duration-300 hover-lift cursor-default flex flex-col"
               )}
             >
               <div className="flex-1">
