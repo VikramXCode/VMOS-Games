@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useAdmin } from "@/contexts/AdminContext";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, Home } from "lucide-react";
 
 export const AdminLoginPage = () => {
   const { login } = useAdmin();
@@ -30,14 +30,17 @@ export const AdminLoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-card px-4 py-10">
-      <Card className="w-full max-w-md bg-card/90 backdrop-blur-md border border-border/60">
-        <CardHeader className="text-center space-y-2">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <ShieldCheck className="h-6 w-6" />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-surface px-4 py-10">
+      <Card className="w-full max-w-md bg-surface-2/95 backdrop-blur-md border border-border/60 rounded-2xl overflow-hidden">
+        <div className="h-1.5 bg-gradient-to-r from-primary via-secondary to-accent" />
+        <CardHeader className="text-center space-y-3 pt-6">
+          <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-secondary text-primary-foreground mx-auto">
+            <ShieldCheck className="h-7 w-7" />
           </div>
-          <CardTitle className="font-heading text-2xl">Admin Dashboard</CardTitle>
-          <p className="text-sm text-muted-foreground">Enter credentials to continue</p>
+          <div>
+            <CardTitle className="font-heading text-2xl">Admin Dashboard</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">Enter credentials to continue</p>
+          </div>
         </CardHeader>
         <CardContent>
           <form className="space-y-4" onSubmit={handleSubmit}>
@@ -48,6 +51,7 @@ export const AdminLoginPage = () => {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 autoComplete="username"
+                className="rounded-xl h-11"
                 required
               />
             </div>
@@ -59,14 +63,19 @@ export const AdminLoginPage = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
+                className="rounded-xl h-11"
                 required
               />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full h-11 rounded-xl" disabled={loading}>
               {loading ? "Signing in..." : "Sign in"}
             </Button>
           </form>
+          <div className="mt-5 text-center text-xs text-muted-foreground flex items-center justify-center gap-1.5">
+            <Home className="h-3.5 w-3.5" />
+            VMOS Game Station
+          </div>
         </CardContent>
       </Card>
     </div>

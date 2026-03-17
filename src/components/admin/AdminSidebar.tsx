@@ -69,10 +69,12 @@ export const AdminSidebar = () => {
   const { logout } = useAdmin();
 
   return (
-    <aside className="hidden md:flex md:flex-col border-r border-border/60 bg-sidebar-background/80 backdrop-blur-md md:sticky md:top-0 md:h-screen">
+    <aside className="hidden md:flex md:flex-col border-r border-border/60 bg-sidebar-background/90 backdrop-blur-md md:sticky md:top-0 md:h-screen">
       <div className="h-16 flex items-center px-4 border-b border-border/60">
         <div className="flex items-center gap-2">
-          <Home className="h-6 w-6 text-primary" />
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+            <Home className="h-5 w-5 text-primary-foreground" />
+          </div>
           <div>
             <p className="font-heading text-lg">VMOS Admin</p>
             <p className="text-xs text-muted-foreground">Control center</p>
@@ -82,10 +84,10 @@ export const AdminSidebar = () => {
 
       <AdminNavContent />
 
-      <div className="px-4 mt-auto pb-6">
+      <div className="px-4 mt-auto pb-6 border-t border-border/60 pt-4">
         <Button
           variant="ghost"
-          className="w-full justify-start gap-2"
+          className="w-full justify-start gap-2 rounded-xl"
           onClick={() => {
             logout();
             navigate("/admin/login");
@@ -107,14 +109,16 @@ export const AdminMobileMenu = () => {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" size="icon" className="md:hidden rounded-xl border-border/60">
+        <Button variant="outline" size="icon" className="md:hidden rounded-xl border-border/60 bg-surface-2">
           <Menu className="h-5 w-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="p-0 w-[88vw] max-w-sm">
+      <SheetContent side="left" className="p-0 w-[88vw] max-w-sm bg-surface-1">
         <SheetHeader className="h-16 px-4 border-b border-border/60 flex items-center justify-center">
           <SheetTitle className="flex items-center gap-2 w-full">
-            <Home className="h-5 w-5 text-primary" />
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+              <Home className="h-4 w-4 text-primary-foreground" />
+            </div>
             <span>VMOS Admin</span>
           </SheetTitle>
         </SheetHeader>
