@@ -31,6 +31,16 @@ const currency = (amount: number) => `₹${amount.toLocaleString("en-IN")}`;
 const parseBudget = (text: string): number | null => {
   const normalized = text.toLowerCase();
 
+  const lakhMatch = normalized.match(/(\d+(?:\.\d+)?)\s*lakh(?:s)?\b/i);
+  if (lakhMatch) {
+    return Math.round(Number(lakhMatch[1]) * 100000);
+  }
+
+  const croreMatch = normalized.match(/(\d+(?:\.\d+)?)\s*crore(?:s)?\b/i);
+  if (croreMatch) {
+    return Math.round(Number(croreMatch[1]) * 10000000);
+  }
+
   const kMatch = normalized.match(/(?:rs\.?|inr|₹)?\s*(\d+(?:\.\d+)?)\s*k\b/i);
   if (kMatch) {
     return Math.round(Number(kMatch[1]) * 1000);
@@ -43,7 +53,7 @@ const parseBudget = (text: string): number | null => {
     return Math.max(...explicitMatches);
   }
 
-  const plainNumberMatches = [...normalized.matchAll(/\b(\d{3,6})\b/g)]
+  const plainNumberMatches = [...normalized.matchAll(/\b(\d{3,9})\b/g)]
     .map((match) => Number(match[1]))
     .filter((value) => Number.isFinite(value) && value > 0);
 
