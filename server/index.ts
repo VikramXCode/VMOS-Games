@@ -16,9 +16,32 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/vmos";
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:8080",
+  process.env.CLIENT_ORIGIN,
+  process.env.CLIENT_ORIGIN_2,
+].filter((origin): origin is string => Boolean(origin));
 
 // Middleware
-app.use(cors({ origin: ["http://localhost:5173", "http://localhost:8080"], credentials: true }));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
+    credentials: true,
+  }),
+);
 app.use(express.json());
 
 // Routes
