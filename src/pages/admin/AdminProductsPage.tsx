@@ -101,7 +101,12 @@ export const AdminProductsPage = () => {
 
   return (
     <AdminLayout>
-      <div className="grid gap-4 md:grid-cols-[320px_1fr]">
+      <div className="mb-4">
+        <h1 className="text-xl font-heading font-semibold">Product Management</h1>
+        <p className="text-sm text-muted-foreground">Add and manage shop products with Cloudinary image upload.</p>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[360px_1fr]">
         <Card>
           <CardHeader>
             <CardTitle>Add Product</CardTitle>
@@ -134,7 +139,7 @@ export const AdminProductsPage = () => {
               <Label>Category</Label>
               <Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
             </div>
-            <Button onClick={addProduct} disabled={!form.name || !form.price || !form.category || !imageFile || isSaving}>
+            <Button className="w-full" onClick={addProduct} disabled={!form.name || !form.price || !form.category || !imageFile || isSaving}>
               {isSaving ? "Saving..." : "Add Product"}
             </Button>
             {error && <p className="text-sm text-destructive">{error}</p>}
@@ -145,20 +150,21 @@ export const AdminProductsPage = () => {
           <CardHeader>
             <CardTitle>Products</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <CardContent className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {isLoading && <p className="text-sm text-muted-foreground">Loading products...</p>}
             {products.length === 0 && <p className="text-sm text-muted-foreground">No products yet.</p>}
             {products.map((p) => (
-              <div key={p.id} className="border border-border/60 rounded-lg p-3 space-y-2">
+              <div key={p.id} className="border border-border/60 rounded-xl p-3 space-y-2">
                 <p className="font-semibold">{p.name}</p>
                 <p className="text-primary font-heading">₹{p.price}</p>
                 <p className="text-xs text-muted-foreground">{p.category || "Uncategorized"}</p>
                 {p.image && (
-                  <img src={p.image} alt={p.name} className="rounded-md h-24 object-cover w-full" />
+                  <img src={p.image} alt={p.name} className="rounded-lg h-28 object-cover w-full" />
                 )}
                 <Button
                   variant="ghost"
                   size="sm"
+                  className="w-full"
                   disabled={removeId === p.id}
                   onClick={() => void removeProduct(p.id)}
                 >
