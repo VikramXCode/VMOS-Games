@@ -18,6 +18,7 @@ import { AdminGuard } from "@/components/admin/AdminGuard";
 const App = () => {
   return (
     <Routes>
+      {/* Public Routes */}
       <Route path="/" element={<HomePage />} />
       <Route path="/booking" element={<BookingPage />} />
       <Route path="/shop" element={<ShopPage />} />
@@ -25,8 +26,10 @@ const App = () => {
       <Route path="/gallery" element={<GalleryPage />} />
       <Route path="/leaderboard" element={<LeaderboardPage />} />
 
-      <Route path="/admindashboard" element={<AdminLoginPage />} />
-      <Route path="/admindashboard" element={<AdminGuard />}>
+      {/* Admin Routes */}
+      <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+      <Route path="/admin/login" element={<AdminLoginPage />} />
+      <Route path="/admin" element={<AdminGuard />}>
         <Route path="overview" element={<AdminOverviewPage />} />
         <Route path="bookings" element={<AdminBookingsPage />} />
         <Route path="slots" element={<AdminSlotsPage />} />
@@ -37,6 +40,7 @@ const App = () => {
         <Route index element={<Navigate to="overview" replace />} />
       </Route>
 
+      {/* Catch-all */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

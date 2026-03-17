@@ -69,7 +69,7 @@ export const AdminSidebar = () => {
           className="w-full justify-start gap-2"
           onClick={() => {
             logout();
-            navigate("/admin");
+            navigate("/admin/login");
           }}
         >
           <LogOut className="h-4 w-4" />
