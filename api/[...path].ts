@@ -1,0 +1,74 @@
+import cors from "cors";
+import dotenv from "dotenv";
+import express from "express";
+import mongoose from "mongoose";
+import serverless from "serverless-http";
+import { adminRoutes } from "../server/routes/admin";
+import { bookingRoutes } from "../server/routes/bookings";
+import { consoleRoutes } from "../server/routes/consoles";
+import { contentRoutes } from "../server/routes/content";
+import { leaderboardRoutes } from "../server/routes/leaderboard";
+import { productRoutes } from "../server/routes/products";
+import { slotRoutes } from "../server/routes/slots";
+import { tournamentRoutes } from "../server/routes/tournaments";
+
+dotenv.config();
+
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/vmos";
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:8080",
+  process.env.CLIENT_ORIGIN,
+  process.env.CLIENT_ORIGIN_2,
+].filter((origin): origin is string => Boolean(origin));
+
+let connectPromise: Promise<typeof mongoose> | null = null;
+
+const connectDatabase = async (): Promise<typeof mongoose> => {
+  if (mongoose.connection.readyState === 1) {
+    return mongoose;
+  }
+
+  if (!connectPromise) {
+    connectPromise = mongoose.connect(MONGODB_URI);
+  }
+
+  return connectPromise;
+};
+
+const app = express();
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
+    credentials: true,
+  }),
+);
+app.use(express.json());
+
+app.use("/api/products", productRoutes);
+app.use("/api/bookings", bookingRoutes);
+app.use("/api/tournaments", tournamentRoutes);
+app.use("/api/leaderboard", leaderboardRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/slots", slotRoutes);
+app.use("/api/consoles", consoleRoutes);
+app.use("/api/content", contentRoutes);
+
+app.get("/api/health", (_req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+const expressHandler = serverless(app);
+
+export default async function handler(req: Parameters<typeof expressHandler>[0], res: Parameters<typeof expressHandler>[1]) {
+  await connectDatabase();
+  return expressHandler(req, res);
+}
