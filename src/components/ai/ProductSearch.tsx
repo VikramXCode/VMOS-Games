@@ -23,6 +23,8 @@ interface SetupItem {
 interface BudgetPromptState {
   budget: number;
   minimum: number;
+  total: number;
+  mode: "premium" | "budget";
   items: SetupItem[];
 }
 
@@ -69,36 +71,100 @@ const pickCheapest = (items: ProductLike[]): ProductLike | null => {
   return [...items].sort((a, b) => a.price - b.price)[0];
 };
 
-const buildBasicSetup = (products: ProductLike[]): SetupItem[] => {
-  const remaining = [...products];
+const slotConfig: Array<{ slot: string; matcher: (product: ProductLike) => boolean }> = [
+  {
+    slot: "Core Device",
+    matcher: (product) => /console|ps5|ps4|ps3|xbox|pc|chair/i.test(product.name),
+  },
+  {
+    slot: "Controller",
+    matcher: (product) => /controller|dualsense|gamepad/i.test(product.name),
+  },
+  {
+    slot: "Game",
+    matcher: (product) => product.category.toLowerCase() === "games" || /gta|red dead|fifa|forza|cod|game/i.test(product.name),
+  },
+  {
+    slot: "Audio",
+    matcher: (product) => /headset|headphone|earphone|audio/i.test(product.name),
+  },
+];
+
+const buildCheapNearBudget = (products: ProductLike[], budget: number): SetupItem[] => {
+  const sorted = [...products].sort((a, b) => a.price - b.price);
   const selected: SetupItem[] = [];
+  let running = 0;
 
-  const takeForSlot = (slot: string, matcher: (product: ProductLike) => boolean) => {
-    const matched = remaining.filter(matcher);
-    const cheapest = pickCheapest(matched);
-    if (!cheapest) return;
-    selected.push({ slot, product: cheapest });
-    const index = remaining.findIndex((item) => item.id === cheapest.id);
-    if (index !== -1) remaining.splice(index, 1);
-  };
-
-  takeForSlot("Core Device", (product) =>
-    /console|controller|ps5|ps4|ps3|xbox|gaming chair|pc/i.test(product.name)
-  );
-  takeForSlot("Game", (product) =>
-    product.category.toLowerCase() === "games" || /game|gta|red dead|fifa|forza|cod/i.test(product.name)
-  );
-  takeForSlot("Audio", (product) => /headset|headphone|earphone|audio/i.test(product.name));
-
-  while (selected.length < 3 && remaining.length > 0) {
-    const cheapestRemaining = pickCheapest(remaining);
-    if (!cheapestRemaining) break;
-    selected.push({ slot: "Essential Add-on", product: cheapestRemaining });
-    const index = remaining.findIndex((item) => item.id === cheapestRemaining.id);
-    if (index !== -1) remaining.splice(index, 1);
+  for (const product of sorted) {
+    if (running + product.price > budget) continue;
+    selected.push({ slot: "Budget Pick", product });
+    running += product.price;
   }
 
   return selected;
+};
+
+const optimizePremiumSetup = (
+  products: ProductLike[],
+  budget: number
+): { items: SetupItem[]; minimum: number } => {
+  const candidates = slotConfig.map((slot) => {
+    const matched = products.filter(slot.matcher);
+    return {
+      slot: slot.slot,
+      items: (matched.length > 0 ? matched : products).sort((a, b) => b.price - a.price),
+    };
+  });
+
+  const minimum = candidates.reduce((sum, candidate) => {
+    const cheapest = pickCheapest(candidate.items);
+    return sum + (cheapest?.price ?? 0);
+  }, 0);
+
+  let bestRequired: SetupItem[] = [];
+  let bestRequiredTotal = -1;
+
+  const pickRequired = (index: number, picked: SetupItem[], usedIds: Set<string>, runningTotal: number) => {
+    if (index >= candidates.length) {
+      if (runningTotal <= budget && runningTotal > bestRequiredTotal) {
+        bestRequired = [...picked];
+        bestRequiredTotal = runningTotal;
+      }
+      return;
+    }
+
+    for (const product of candidates[index].items) {
+      if (usedIds.has(product.id)) continue;
+      if (runningTotal + product.price > budget) continue;
+      picked.push({ slot: candidates[index].slot, product });
+      usedIds.add(product.id);
+      pickRequired(index + 1, picked, usedIds, runningTotal + product.price);
+      usedIds.delete(product.id);
+      picked.pop();
+    }
+  };
+
+  pickRequired(0, [], new Set<string>(), 0);
+
+  if (bestRequired.length === 0) {
+    return { items: [], minimum };
+  }
+
+  const selectedIds = new Set(bestRequired.map((item) => item.product.id));
+  const optionalSorted = products
+    .filter((item) => !selectedIds.has(item.id))
+    .sort((a, b) => b.price - a.price);
+
+  let total = bestRequired.reduce((sum, item) => sum + item.product.price, 0);
+  const withAddOns = [...bestRequired];
+
+  for (const product of optionalSorted) {
+    if (total + product.price > budget) continue;
+    withAddOns.push({ slot: "Add-on", product });
+    total += product.price;
+  }
+
+  return { items: withAddOns, minimum };
 };
 
 export const ProductSearch = ({ products, onApply }: ProductSearchProps) => {
@@ -138,36 +204,68 @@ export const ProductSearch = ({ products, onApply }: ProductSearchProps) => {
   };
 
   const runBudgetPlanner = (budget: number) => {
-    const setupItems = buildBasicSetup(products);
-    if (setupItems.length === 0) {
+    const premium = optimizePremiumSetup(products, budget);
+    if (premium.items.length === 0) {
       setError("No products are available right now. Please contact us on WhatsApp.");
       return;
     }
 
-    const minimum = setupItems.reduce((sum, item) => sum + item.product.price, 0);
-    const plannerState: BudgetPromptState = { budget, minimum, items: setupItems };
+    const premiumTotal = premium.items.reduce((sum, item) => sum + item.product.price, 0);
+    const plannerState: BudgetPromptState = {
+      budget,
+      minimum: premium.minimum,
+      total: premiumTotal,
+      mode: "premium",
+      items: premium.items,
+    };
 
     setInfo(null);
     setError(null);
 
-    if (budget >= minimum) {
+    if (budget >= premium.minimum) {
       setBudgetPrompt(null);
       setBudgetPlan(plannerState);
-      onApply(setupItems.map((item) => item.product.id));
-      setInfo(`Great choice. Your basic setup fits in ${currency(budget)}.`);
+      onApply(premium.items.map((item) => item.product.id));
+      setInfo(`Built a maximum-value setup bill under ${currency(budget)} with costly items first.`);
       return;
     }
 
-    setBudgetPlan(null);
+    const cheapItems = buildCheapNearBudget(products, budget);
+    const cheapTotal = cheapItems.reduce((sum, item) => sum + item.product.price, 0);
+
+    if (cheapItems.length === 0) {
+      setBudgetPlan(null);
+      setBudgetPrompt(plannerState);
+      onApply(null);
+      setInfo(`Your budget is too low for current catalog items. Increase to ${currency(premium.minimum)} for a complete setup.`);
+      return;
+    }
+
+    setBudgetPlan({
+      budget,
+      minimum: premium.minimum,
+      total: cheapTotal,
+      mode: "budget",
+      items: cheapItems,
+    });
     setBudgetPrompt(plannerState);
-    onApply(null);
+    onApply(cheapItems.map((item) => item.product.id));
+    setInfo(`Picked budget-friendly items near ${currency(budget)}. Increase to ${currency(premium.minimum)} for a full setup.`);
   };
 
   const showIncreasedBudgetPlan = () => {
     if (!budgetPrompt) return;
-    setBudgetPlan(budgetPrompt);
+    const upgraded = optimizePremiumSetup(products, budgetPrompt.minimum);
+    const upgradedTotal = upgraded.items.reduce((sum, item) => sum + item.product.price, 0);
+    setBudgetPlan({
+      budget: budgetPrompt.minimum,
+      minimum: upgraded.minimum,
+      total: upgradedTotal,
+      mode: "premium",
+      items: upgraded.items,
+    });
     setBudgetPrompt(null);
-    onApply(budgetPrompt.items.map((item) => item.product.id));
+    onApply(upgraded.items.map((item) => item.product.id));
     setInfo(`To complete the setup, please increase your budget to at least ${currency(budgetPrompt.minimum)}.`);
   };
 
@@ -248,8 +346,10 @@ export const ProductSearch = ({ products, onApply }: ProductSearchProps) => {
       {budgetPlan && (
         <div className="mt-3 rounded-lg border border-border/50 bg-surface-2 p-3">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-semibold">Basic Setup Plan</p>
-            <p className="text-sm font-mono text-primary">Total: {currency(budgetPlan.minimum)}</p>
+            <p className="text-sm font-semibold">
+              {budgetPlan.mode === "premium" ? "Maximum Setup Bill" : "Budget-Friendly Picks"}
+            </p>
+            <p className="text-sm font-mono text-primary">Total: {currency(budgetPlan.total)}</p>
           </div>
           <div className="space-y-1.5">
             {budgetPlan.items.map((item) => (
@@ -259,8 +359,22 @@ export const ProductSearch = ({ products, onApply }: ProductSearchProps) => {
               </div>
             ))}
           </div>
+          <div className="mt-2 pt-2 border-t border-border/60 text-xs space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Budget</span>
+              <span className="font-mono">{currency(budgetPlan.budget)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Bill Total</span>
+              <span className="font-mono text-primary">{currency(budgetPlan.total)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Remaining</span>
+              <span className="font-mono">{currency(Math.max(0, budgetPlan.budget - budgetPlan.total))}</span>
+            </div>
+          </div>
           <div className="mt-3 flex flex-wrap gap-2">
-            <Button size="sm" variant="outline" onClick={() => openWhatsApp(budgetPlan.minimum)}>
+            <Button size="sm" variant="outline" onClick={() => openWhatsApp(budgetPlan.total)}>
               Need Help on WhatsApp
             </Button>
           </div>
