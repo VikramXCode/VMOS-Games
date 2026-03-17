@@ -1,6 +1,17 @@
 import { Router, Request, Response } from "express";
 import { Admin } from "../models/Admin";
-import { generateToken, authMiddleware } from "../middleware/auth";
+import { generateToken, authMiddleware, type AuthRequest } from "../middleware/auth";
+
+type AdminDocumentLike = {
+  _id: { toString(): string };
+  username: string;
+  role: string;
+  comparePassword(candidatePassword: string): Promise<boolean>;
+};
+
+const isMongoDuplicateKeyError = (error: unknown): error is { code: number } => {
+  return typeof error === "object" && error !== null && "code" in error && (error as { code?: unknown }).code === 11000;
+};
 
 const router = Router();
 
@@ -19,7 +30,7 @@ router.post("/login", async (req: Request, res: Response) => {
       return;
     }
 
-    const isValid = await (admin as any).comparePassword(password);
+    const isValid = await (admin as unknown as AdminDocumentLike).comparePassword(password);
     if (!isValid) {
       res.status(401).json({ error: "Invalid credentials" });
       return;
@@ -40,7 +51,7 @@ router.post("/login", async (req: Request, res: Response) => {
 });
 
 // GET verify token (check if current token is still valid)
-router.get("/me", authMiddleware, async (req: any, res: Response) => {
+router.get("/me", authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const admin = await Admin.findById(req.adminId).select("-password");
     if (!admin) {
@@ -71,8 +82,8 @@ router.post("/register", async (req: Request, res: Response) => {
       token,
       admin: { id: admin._id, username: admin.username, role: admin.role },
     });
-  } catch (err: any) {
-    if (err.code === 11000) {
+  } catch (err: unknown) {
+    if (isMongoDuplicateKeyError(err)) {
       res.status(409).json({ error: "Username already exists" });
       return;
     }

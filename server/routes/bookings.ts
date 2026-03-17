@@ -2,6 +2,10 @@ import { Router, Request, Response } from "express";
 import { Booking } from "../models/Booking";
 import { authMiddleware } from "../middleware/auth";
 
+const isMongoDuplicateKeyError = (error: unknown): error is { code: number } => {
+  return typeof error === "object" && error !== null && "code" in error && (error as { code?: unknown }).code === 11000;
+};
+
 const router = Router();
 
 // GET all bookings (admin only)
@@ -43,8 +47,8 @@ router.post("/", async (req: Request, res: Response) => {
   try {
     const booking = await Booking.create(req.body);
     res.status(201).json(booking);
-  } catch (err: any) {
-    if (err.code === 11000) {
+  } catch (err: unknown) {
+    if (isMongoDuplicateKeyError(err)) {
       res.status(409).json({ error: "Slot already booked" });
       return;
     }

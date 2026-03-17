@@ -36,7 +36,7 @@ export const LeaderboardPage = () => {
   useEffect(() => {
     api.leaderboard.list()
       .then((items) => {
-        setLeaderboard(items.map((item: any, index: number) => ({
+        setLeaderboard(items.map((item, index: number) => ({
           rank: Number(item.rank) || index + 1,
           name: item.name,
           hours: Number(item.hours) || 0,

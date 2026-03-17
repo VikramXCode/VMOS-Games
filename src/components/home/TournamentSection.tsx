@@ -9,7 +9,7 @@ const openWhatsApp = () => {
 };
 
 export const TournamentSection = () => {
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<Array<Record<string, unknown>>>([]);
 
   useEffect(() => {
     api.tournaments.list().then(setItems).catch(() => setItems([]));

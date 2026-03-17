@@ -21,17 +21,17 @@ interface Tournament {
   status: "upcoming" | "live" | "completed";
 }
 
-const mapTournament = (raw: any): Tournament => ({
+const mapTournament = (raw: Record<string, unknown>): Tournament => ({
   id: raw._id || raw.id,
-  name: raw.name,
-  game: raw.game,
-  date: raw.date,
-  time: raw.time,
+  name: String(raw.name || ""),
+  game: String(raw.game || ""),
+  date: String(raw.date || ""),
+  time: String(raw.time || ""),
   entryFee: Number(raw.entryFee) || 0,
   prizePool: Number(raw.prizePool) || 0,
   maxSlots: Number(raw.maxSlots) || 0,
   filledSlots: Number(raw.filledSlots) || 0,
-  status: raw.status || "upcoming",
+  status: (raw.status as Tournament["status"]) || "upcoming",
 });
 
 export const AdminTournamentsPage = () => {

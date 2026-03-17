@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { formatISO } from "date-fns";
 import { api } from "@/lib/api";
 
@@ -84,31 +84,31 @@ const generateSlots = () => {
 };
 
 
-const mapConsole = (item: any): ConsoleType => ({
+const mapConsole = (item: Record<string, unknown>): ConsoleType => ({
   id: item.key || item.id,
-  name: item.name,
+  name: String(item.name || ""),
   price: Number(item.price) || 0,
-  icon: item.icon || "🎮",
+  icon: String(item.icon || "🎮"),
 });
 
-const mapBooking = (item: any): Booking => {
+const mapBooking = (item: Record<string, unknown>): Booking => {
   const hour = Number(String(item.startTime || "10:00").split(":")[0]) || 10;
   return {
     id: item._id || item.id,
-    name: item.customerName,
-    phone: item.customerPhone,
-    consoleId: item.consoleId,
-    consoleName: item.consoleName,
-    date: item.date,
+    name: String(item.customerName || ""),
+    phone: String(item.customerPhone || ""),
+    consoleId: String(item.consoleId || ""),
+    consoleName: String(item.consoleName || ""),
+    date: String(item.date || ""),
     slots: [{
       id: `slot-${hour}`,
-      start: item.startTime,
-      end: item.endTime,
+      start: String(item.startTime || ""),
+      end: String(item.endTime || ""),
       hour,
       available: false,
     }],
     amount: Number(item.price) || 0,
-    status: item.status,
+    status: (item.status as Booking["status"]) || "pending",
     createdAt: item.createdAt || formatISO(new Date()),
   };
 };
@@ -239,21 +239,18 @@ export const BookingProvider = ({ children }: { children: React.ReactNode }) => 
     });
   };
 
-  const value = useMemo(
-    () => ({
-      bookings,
-      consoles,
-      addBooking,
-      updateBookingStatus,
-      deleteBooking,
-      getAvailability,
-      getAdminSlotStates,
-      toggleSlotBlocked,
-      blockAllSlots,
-      unblockAllSlots,
-    }),
-    [bookings, slotOverrides, consoles]
-  );
+  const value: BookingContextValue = {
+    bookings,
+    consoles,
+    addBooking,
+    updateBookingStatus,
+    deleteBooking,
+    getAvailability,
+    getAdminSlotStates,
+    toggleSlotBlocked,
+    blockAllSlots,
+    unblockAllSlots,
+  };
 
   return <BookingContext.Provider value={value}>{children}</BookingContext.Provider>;
 };

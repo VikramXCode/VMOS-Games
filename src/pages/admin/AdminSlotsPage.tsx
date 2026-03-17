@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -13,6 +13,12 @@ type SlotState = {
   start: string;
   end: string;
   state: "available" | "blocked" | "booked";
+};
+
+type SlotOverride = {
+  _id?: string;
+  id?: string;
+  startTime?: string;
 };
 
 const buildSlots = (bookedSlots: string[], blockedStartTimes: string[], blockedAllDay: boolean): SlotState[] => {
@@ -37,14 +43,14 @@ export const AdminSlotsPage = () => {
   const [bulkMode, setBulkMode] = useState(false);
   const [bulkSelected, setBulkSelected] = useState<string[]>([]);
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
-  const [overrides, setOverrides] = useState<any[]>([]);
+  const [overrides, setOverrides] = useState<SlotOverride[]>([]);
   const holdTimerRef = useRef<number | null>(null);
 
   const blockedStartTimes = useMemo(() => overrides.map((o) => o.startTime).filter(Boolean), [overrides]);
   const blockedAllDay = useMemo(() => overrides.some((o) => !o.startTime), [overrides]);
   const slots = useMemo(() => buildSlots(bookedSlots, blockedStartTimes, blockedAllDay), [bookedSlots, blockedStartTimes, blockedAllDay]);
 
-  const loadData = () => {
+  const loadData = useCallback(() => {
     if (!consoleId) return;
     Promise.all([
       api.bookings.availability(date, consoleId),
@@ -52,13 +58,13 @@ export const AdminSlotsPage = () => {
     ])
       .then(([availability, overridesList]) => {
         setBookedSlots(availability.bookedSlots || []);
-        setOverrides(overridesList || []);
+        setOverrides((overridesList || []) as SlotOverride[]);
       })
       .catch(() => {
         setBookedSlots([]);
         setOverrides([]);
       });
-  };
+  }, [consoleId, date]);
 
   useEffect(() => {
     if (consoles.length > 0 && !consoleId) setConsoleId(consoles[0].id);
@@ -66,7 +72,7 @@ export const AdminSlotsPage = () => {
 
   useEffect(() => {
     loadData();
-  }, [date, consoleId]);
+  }, [loadData]);
 
   const toggleSingleSlot = async (startTime: string, state: SlotState["state"]) => {
     if (!consoleId || state === "booked") return;

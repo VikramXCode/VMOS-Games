@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
   darkMode: ["class"],
@@ -18,8 +19,10 @@ export default {
     },
     extend: {
       fontFamily: {
-        heading: ["Orbitron", "sans-serif"],
+        display: ["Rajdhani", "sans-serif"],
+        heading: ["Exo 2", "sans-serif"],
         body: ["Inter", "sans-serif"],
+        mono: ["JetBrains Mono", "monospace"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -73,6 +76,14 @@ export default {
           red: "hsl(var(--neon-red))",
           orange: "hsl(var(--neon-orange))",
         },
+        gold: "hsl(var(--brand-gold))",
+        surface: {
+          0: "hsl(var(--surface-0))",
+          1: "hsl(var(--surface-1))",
+          2: "hsl(var(--surface-2))",
+          3: "hsl(var(--surface-3))",
+          4: "hsl(var(--surface-4))",
+        },
         slot: {
           available: "hsl(var(--slot-available))",
           booked: "hsl(var(--slot-booked))",
@@ -97,7 +108,7 @@ export default {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0.7" },
         },
-        "glow": {
+        glow: {
           "0%, 100%": { boxShadow: "0 0 20px hsl(var(--primary) / 0.5)" },
           "50%": { boxShadow: "0 0 30px hsl(var(--primary) / 0.8)" },
         },
@@ -106,13 +117,14 @@ export default {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "pulse-neon": "pulse-neon 2s ease-in-out infinite",
-        "glow": "glow 2s ease-in-out infinite",
+        glow: "glow 2s ease-in-out infinite",
       },
       backgroundImage: {
         "gradient-neon": "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)))",
-        "gradient-dark": "linear-gradient(180deg, hsl(220 25% 8%), hsl(220 25% 4%))",
+        "gradient-dark": "linear-gradient(180deg, hsl(222 28% 7%), hsl(222 30% 5%))",
+        "gradient-surface": "linear-gradient(180deg, hsl(var(--surface-1)), hsl(var(--surface-0)))",
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindcssAnimate],
 } satisfies Config;

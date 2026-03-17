@@ -28,7 +28,7 @@ const ShopPage = () => {
   useEffect(() => {
     api.products.list()
       .then((data) => {
-        const mapped = data.map((p: any) => ({
+        const mapped = data.map((p) => ({
           id: p._id || p.id,
           name: p.name,
           price: p.price,

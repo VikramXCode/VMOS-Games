@@ -46,7 +46,7 @@ const TournamentsPage = () => {
   useEffect(() => {
     api.tournaments.list()
       .then((items) => {
-        setTournaments(items.map((item: any) => ({
+        setTournaments(items.map((item) => ({
           id: item._id || item.id,
           name: item.name,
           game: item.game,

@@ -17,13 +17,13 @@ interface Product {
   category: string;
 }
 
-const mapProduct = (raw: any): Product => ({
+const mapProduct = (raw: Record<string, unknown>): Product => ({
   id: raw._id || raw.id,
-  name: raw.name,
+  name: String(raw.name || ""),
   price: Number(raw.price) || 0,
-  image: raw.image,
-  imagePublicId: raw.imagePublicId,
-  category: raw.category,
+  image: String(raw.image || ""),
+  imagePublicId: raw.imagePublicId ? String(raw.imagePublicId) : undefined,
+  category: String(raw.category || ""),
 });
 
 export const AdminProductsPage = () => {

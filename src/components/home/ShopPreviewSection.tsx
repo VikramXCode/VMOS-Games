@@ -23,7 +23,7 @@ export const ShopPreviewSection = () => {
     api.products.list()
       .then((items) => {
         setProducts(
-          items.slice(0, 6).map((item: any) => ({
+          items.slice(0, 6).map((item) => ({
             id: item._id || item.id,
             name: item.name,
             price: Number(item.price) || 0,
