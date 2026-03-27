@@ -153,15 +153,48 @@ const expressHandler = serverless(app);
 export default async function handler(req: Parameters<typeof expressHandler>[0], res: Parameters<typeof expressHandler>[1]) {
   try {
     console.log(`📨 ${req.method} ${req.url}`);
+    
+    // Ensure database connection
     await withTimeout(connectDatabase(), 12000, "Database bootstrap timed out");
     console.log("✅ Database connected, handling request");
-    return await withTimeout(
-      Promise.resolve(expressHandler(req, res)),
-      25000,
-      "Request handler timed out"
-    );
+    
+    // Execute express handler with timeout
+    return await new Promise<void>((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        reject(new Error("Request handler timed out after 25s"));
+      }, 25000);
+
+      try {
+        const result = expressHandler(req, res);
+        
+        // Handle promise-based handlers
+        if (result instanceof Promise) {
+          result
+            .then(() => {
+              clearTimeout(timeoutId);
+              resolve();
+            })
+            .catch((err) => {
+              clearTimeout(timeoutId);
+              reject(err);
+            });
+        } else {
+          // Handlers that use res.end() or res.json()
+          // Wait a bit for response to be sent
+          setTimeout(() => {
+            clearTimeout(timeoutId);
+            resolve();
+          }, 100);
+        }
+      } catch (err) {
+        clearTimeout(timeoutId);
+        reject(err);
+      }
+    });
   } catch (err) {
     console.error("❌ Handler error:", err instanceof Error ? err.message : String(err));
-    res.status(500).json({ error: "Service is currently unavailable. Please check MongoDB connection." });
+    if (!res.headersSent) {
+      res.status(500).json({ error: "Service is currently unavailable. Please check MongoDB connection." });
+    }
   }
 }

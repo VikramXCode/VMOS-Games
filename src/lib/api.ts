@@ -1,5 +1,5 @@
 const API_BASE = "/api";
-const REQUEST_TIMEOUT_MS = 12000;
+const REQUEST_TIMEOUT_MS = 60000; // Increased from 12s to 60s for serverless cold starts
 
 type ApiRecord = Record<string, unknown>;
 type ApiEntity = ApiRecord & { _id?: string; id?: string };
