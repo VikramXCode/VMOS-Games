@@ -3,7 +3,7 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useBooking } from "@/contexts/BookingContext";
-import { generateGeminiText, isGeminiConfigured } from "@/lib/gemini";
+import { generateGroqText, isGroqConfigured } from "@/lib/groq";
 import { Input } from "@/components/ui/input";
 
 export const AdminAIInsightsPage = () => {
@@ -35,15 +35,15 @@ export const AdminAIInsightsPage = () => {
   };
 
   const generate = async () => {
-    if (!isGeminiConfigured) {
-      setReport("Set VITE_GEMINI_API_KEY to enable AI insights.");
+    if (!isGroqConfigured) {
+      setReport("Set VITE_GROQ_API_KEY to enable AI insights.");
       return;
     }
     setLoading(true);
     try {
       const summary = buildSummary();
       const prompt = `Analyze this VMOS dashboard data and produce concise actionable report with sections: Peak Hours, Revenue Outlook, Underperforming Categories, Marketing Actions. Data: ${JSON.stringify(summary)}`;
-      const text = await generateGeminiText(prompt, ["gemini-1.5-pro-latest", "gemini-2.0-flash"]);
+      const text = await generateGroqText(prompt, ["llama-3.1-70b-versatile", "llama-3.1-8b-instant"]);
       setReport(text || "No report generated.");
     } catch (error) {
       console.error(error);
@@ -55,15 +55,15 @@ export const AdminAIInsightsPage = () => {
 
   const askFollowUp = async () => {
     if (!question.trim()) return;
-    if (!isGeminiConfigured) {
-      setFollowUpAnswer("Set VITE_GEMINI_API_KEY to enable follow-up Q&A.");
+    if (!isGroqConfigured) {
+      setFollowUpAnswer("Set VITE_GROQ_API_KEY to enable follow-up Q&A.");
       return;
     }
     setFollowUpLoading(true);
     try {
       const summary = buildSummary();
       const prompt = `You are VMOS admin analyst. Data: ${JSON.stringify(summary)}. Question: ${question}. Give a concise answer with numbers where possible.`;
-      const text = await generateGeminiText(prompt, ["gemini-2.0-flash", "gemini-1.5-flash-latest"]);
+      const text = await generateGroqText(prompt, ["llama-3.1-8b-instant", "llama-3.1-70b-versatile"]);
       setFollowUpAnswer(text || "No answer generated.");
     } catch (error) {
       console.error(error);
@@ -108,7 +108,7 @@ export const AdminAIInsightsPage = () => {
           </div>
         </CardContent>
         <CardFooter className="text-xs text-muted-foreground">
-          Powered by Gemini.
+          Powered by Groq.
         </CardFooter>
       </Card>
     </AdminLayout>

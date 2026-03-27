@@ -19,13 +19,20 @@ const BookingPage = () => {
   const [timeSlots, setTimeSlots] = useState<Array<{ id: string; start: string; end: string; hour: number; available: boolean }>>([]);
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
 
-  const buildSlots = (bookedSlots: string[]) => {
+  const buildSlots = (bookedSlots: string[], blockedSlots: string[], blockedAllDay: boolean) => {
     const booked = new Set(bookedSlots);
+    const blocked = new Set(blockedSlots);
     const slots = [] as Array<{ id: string; start: string; end: string; hour: number; available: boolean }>;
     for (let hour = 10; hour < 22; hour++) {
       const start = `${hour.toString().padStart(2, "0")}:00`;
       const end = `${(hour + 1).toString().padStart(2, "0")}:00`;
-      slots.push({ id: `slot-${hour}`, start, end, hour, available: !booked.has(start) });
+      slots.push({
+        id: `slot-${hour}`,
+        start,
+        end,
+        hour,
+        available: !booked.has(start) && !blockedAllDay && !blocked.has(start),
+      });
     }
     return slots;
   };
@@ -34,13 +41,21 @@ const BookingPage = () => {
 
   const refreshSlots = useCallback(() => {
     if (!selectedConsole) return;
-    api.bookings.availability(dateString, selectedConsole)
-      .then((data) => {
-        setTimeSlots(buildSlots(data.bookedSlots || []));
+    Promise.all([
+      api.bookings.availability(dateString, selectedConsole),
+      api.slots.overrides(dateString, selectedConsole),
+    ])
+      .then(([availability, overrides]) => {
+        const blockedStartTimes = (overrides || [])
+          .map((override) => override.startTime)
+          .filter((startTime): startTime is string => Boolean(startTime));
+        const blockedAllDay = (overrides || []).some((override) => !override.startTime);
+
+        setTimeSlots(buildSlots(availability.bookedSlots || [], blockedStartTimes, blockedAllDay));
         setLastRefreshed(new Date());
       })
       .catch(() => {
-        setTimeSlots(buildSlots([]));
+        setTimeSlots(buildSlots([], [], false));
         setLastRefreshed(new Date());
       });
   }, [dateString, selectedConsole]);

@@ -40,7 +40,6 @@ Backend:
 
 AI:
 - Groq SDK
-- Google Generative AI (Gemini)
 
 Testing/Quality:
 - Vitest + Testing Library + jsdom
@@ -280,7 +279,7 @@ Prerequisites:
 - Node.js 18+
 - MongoDB
 - Cloudinary account
-- Optional AI API keys (Groq/Gemini)
+- Optional AI API keys (Groq)
 
 Environment variables:
 - MONGODB_URI
@@ -291,7 +290,6 @@ Environment variables:
 - CLOUDINARY_API_SECRET
 - CLOUDINARY_FOLDER (optional)
 - VITE_GROQ_API_KEY
-- VITE_GEMINI_API_KEY
 
 Install:
 - npm install

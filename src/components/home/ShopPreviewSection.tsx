@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { resolveImageUrl } from "@/lib/image";
 
 interface ProductPreview {
   id: string;
@@ -28,7 +29,7 @@ export const ShopPreviewSection = () => {
             name: item.name,
             price: Number(item.price) || 0,
             category: item.category,
-            image: item.image,
+            image: resolveImageUrl(item.image),
           }))
         );
       })

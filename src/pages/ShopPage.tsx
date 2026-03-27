@@ -7,6 +7,7 @@ import { useCart } from "@/contexts/CartContext";
 import { CartDrawer } from "@/components/shop/CartDrawer";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
+import { resolveImageUrl } from "@/lib/image";
 
 interface Product {
   id: string;
@@ -32,7 +33,7 @@ const ShopPage = () => {
           id: p._id || p.id,
           name: p.name,
           price: p.price,
-          image: p.image,
+          image: resolveImageUrl(p.image),
           category: p.category,
         }));
         setProducts(mapped);

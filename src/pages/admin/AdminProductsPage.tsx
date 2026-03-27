@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { api } from "@/lib/api";
 import { Plus } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { resolveImageUrl } from "@/lib/image";
 
 interface Product {
   id: string;
@@ -21,7 +22,7 @@ const mapProduct = (raw: Record<string, unknown>): Product => ({
   id: raw._id || raw.id,
   name: String(raw.name || ""),
   price: Number(raw.price) || 0,
-  image: String(raw.image || ""),
+  image: resolveImageUrl(String(raw.image || "")),
   imagePublicId: raw.imagePublicId ? String(raw.imagePublicId) : undefined,
   category: String(raw.category || ""),
 });
