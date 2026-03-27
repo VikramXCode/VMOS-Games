@@ -115,12 +115,10 @@ async function seed() {
     await SiteContent.create(siteContent);
     console.log("🧩 Seeded site content");
 
-    // Create default admin if none exists
-    const adminCount = await Admin.countDocuments();
-    if (adminCount === 0) {
-      await Admin.create({ username: "admin", password: "vmos2026", role: "superadmin" });
-      console.log("👤 Created default admin (username: admin, password: vmos2026)");
-    }
+    // Create/reset default admin
+    await Admin.deleteMany({});
+    await Admin.create({ username: "admin", password: "vmos2026", role: "superadmin" });
+    console.log("👤 Created default admin (username: admin, password: vmos2026)");
 
     console.log("\n✅ Seed complete!");
     process.exit(0);
