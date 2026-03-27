@@ -1,8 +1,23 @@
 {
-  "buildCommand": "npm run build",
-  "devCommand": "npm run dev",
-  "outputDirectory": "dist",
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/[...path].ts",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    }
+  ],
   "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/[...path].ts"
+    },
     {
       "handle": "filesystem"
     },
