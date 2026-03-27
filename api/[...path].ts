@@ -3,14 +3,14 @@ import dotenv from "dotenv";
 import express from "express";
 import mongoose from "mongoose";
 import serverless from "serverless-http";
-import { adminRoutes } from "../server/routes/admin";
-import { bookingRoutes } from "../server/routes/bookings";
-import { consoleRoutes } from "../server/routes/consoles";
-import { contentRoutes } from "../server/routes/content";
-import { leaderboardRoutes } from "../server/routes/leaderboard";
-import { productRoutes } from "../server/routes/products";
-import { slotRoutes } from "../server/routes/slots";
-import { tournamentRoutes } from "../server/routes/tournaments";
+import { adminRoutes } from "../server/routes/admin.js";
+import { bookingRoutes } from "../server/routes/bookings.js";
+import { consoleRoutes } from "../server/routes/consoles.js";
+import { contentRoutes } from "../server/routes/content.js";
+import { leaderboardRoutes } from "../server/routes/leaderboard.js";
+import { productRoutes } from "../server/routes/products.js";
+import { slotRoutes } from "../server/routes/slots.js";
+import { tournamentRoutes } from "../server/routes/tournaments.js";
 
 dotenv.config();
 

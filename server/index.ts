@@ -2,14 +2,14 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import { productRoutes } from "./routes/products";
-import { bookingRoutes } from "./routes/bookings";
-import { tournamentRoutes } from "./routes/tournaments";
-import { leaderboardRoutes } from "./routes/leaderboard";
-import { adminRoutes } from "./routes/admin";
-import { slotRoutes } from "./routes/slots";
-import { consoleRoutes } from "./routes/consoles";
-import { contentRoutes } from "./routes/content";
+import { productRoutes } from "./routes/products.js";
+import { bookingRoutes } from "./routes/bookings.js";
+import { tournamentRoutes } from "./routes/tournaments.js";
+import { leaderboardRoutes } from "./routes/leaderboard.js";
+import { adminRoutes } from "./routes/admin.js";
+import { slotRoutes } from "./routes/slots.js";
+import { consoleRoutes } from "./routes/consoles.js";
+import { contentRoutes } from "./routes/content.js";
 
 dotenv.config();
 

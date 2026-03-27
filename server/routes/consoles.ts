@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { ConsoleModel } from "../models/Console";
+import { ConsoleModel } from "../models/Console.js";
 
 const router = Router();
 

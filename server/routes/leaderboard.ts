@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
-import { LeaderboardEntry } from "../models/LeaderboardEntry";
-import { authMiddleware } from "../middleware/auth";
+import { LeaderboardEntry } from "../models/LeaderboardEntry.js";
+import { authMiddleware } from "../middleware/auth.js";
 
 const router = Router();
 

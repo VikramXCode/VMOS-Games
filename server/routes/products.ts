@@ -1,12 +1,12 @@
 import { Router, Request, Response } from "express";
 import multer from "multer";
-import { Product } from "../models/Product";
-import { authMiddleware } from "../middleware/auth";
+import { Product } from "../models/Product.js";
+import { authMiddleware } from "../middleware/auth.js";
 import {
   deleteCloudinaryImage,
   isCloudinaryConfigured,
   uploadImageBuffer,
-} from "../lib/cloudinary";
+} from "../lib/cloudinary.js";
 
 const router = Router();
 const upload = multer({

@@ -1,11 +1,11 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import { Product } from "./models/Product";
-import { Tournament } from "./models/Tournament";
-import { LeaderboardEntry } from "./models/LeaderboardEntry";
-import { Admin } from "./models/Admin";
-import { ConsoleModel } from "./models/Console";
-import { SiteContent } from "./models/SiteContent";
+import { Product } from "./models/Product.js";
+import { Tournament } from "./models/Tournament.js";
+import { LeaderboardEntry } from "./models/LeaderboardEntry.js";
+import { Admin } from "./models/Admin.js";
+import { ConsoleModel } from "./models/Console.js";
+import { SiteContent } from "./models/SiteContent.js";
 
 dotenv.config();
 

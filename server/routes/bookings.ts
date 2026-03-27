@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
-import { Booking } from "../models/Booking";
-import { authMiddleware } from "../middleware/auth";
+import { Booking } from "../models/Booking.js";
+import { authMiddleware } from "../middleware/auth.js";
 
 const isMongoDuplicateKeyError = (error: unknown): error is { code: number } => {
   return typeof error === "object" && error !== null && "code" in error && (error as { code?: unknown }).code === 11000;

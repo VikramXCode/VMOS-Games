@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
-import { Tournament } from "../models/Tournament";
-import { authMiddleware } from "../middleware/auth";
+import { Tournament } from "../models/Tournament.js";
+import { authMiddleware } from "../middleware/auth.js";
 
 const router = Router();
 

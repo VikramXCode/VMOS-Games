@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
-import { SlotOverride } from "../models/SlotOverride";
-import { authMiddleware } from "../middleware/auth";
+import { SlotOverride } from "../models/SlotOverride.js";
+import { authMiddleware } from "../middleware/auth.js";
 
 const router = Router();
 

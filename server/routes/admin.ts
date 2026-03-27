@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
-import { Admin } from "../models/Admin";
-import { generateToken, authMiddleware, type AuthRequest } from "../middleware/auth";
+import { Admin } from "../models/Admin.js";
+import { generateToken, authMiddleware, type AuthRequest } from "../middleware/auth.js";
 
 type AdminDocumentLike = {
   _id: { toString(): string };
