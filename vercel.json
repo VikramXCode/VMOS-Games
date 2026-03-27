@@ -4,16 +4,7 @@
   "outputDirectory": "dist",
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/[...path]"
-    },
-    {
-      "src": "/assets/(.*)",
-      "dest": "/assets/$1"
-    },
-    {
-      "src": ".*\\.(js|css|woff|woff2|ttf|eot|svg|png|jpg|jpeg|gif|ico)$",
-      "dest": "/$0"
+      "handle": "filesystem"
     },
     {
       "src": "/(.*)",
