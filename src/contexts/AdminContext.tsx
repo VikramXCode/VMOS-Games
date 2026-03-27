@@ -41,11 +41,17 @@ export const AdminProvider = ({ children }: { children: React.ReactNode }) => {
 
   const login = async (username: string, password: string) => {
     try {
+      console.log("[AdminContext] Attempting login with username:", username);
       const data = await api.admin.login(username, password);
+      console.log("[AdminContext] Login successful:", data);
       window.localStorage.setItem(TOKEN_KEY, data.token);
       setIsAuthenticated(true);
       return true;
-    } catch {
+    } catch (error) {
+      console.error("[AdminContext] Login failed:", error);
+      if (error instanceof Error) {
+        console.error("[AdminContext] Error message:", error.message);
+      }
       setIsAuthenticated(false);
       return false;
     }

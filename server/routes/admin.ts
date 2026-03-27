@@ -19,23 +19,31 @@ const router = Router();
 router.post("/login", async (req: Request, res: Response) => {
   try {
     const { username, password } = req.body;
+    console.log("[Admin Login] Received login request for username:", username);
+    
     if (!username || !password) {
+      console.log("[Admin Login] Missing credentials");
       res.status(400).json({ error: "Username and password required" });
       return;
     }
 
+    console.log("[Admin Login] Looking up admin with username:", username);
     const admin = await Admin.findOne({ username });
     if (!admin) {
+      console.error("[Admin Login] Admin not found for username:", username);
       res.status(401).json({ error: "Invalid credentials" });
       return;
     }
 
+    console.log("[Admin Login] Admin found, comparing passwords");
     const isValid = await (admin as unknown as AdminDocumentLike).comparePassword(password);
     if (!isValid) {
+      console.error("[Admin Login] Password comparison failed for username:", username);
       res.status(401).json({ error: "Invalid credentials" });
       return;
     }
 
+    console.log("[Admin Login] Login successful for username:", username);
     const token = generateToken(admin._id.toString());
     res.json({
       token,
@@ -46,6 +54,7 @@ router.post("/login", async (req: Request, res: Response) => {
       },
     });
   } catch (err) {
+    console.error("[Admin Login] Server error:", err);
     res.status(500).json({ error: "Login failed" });
   }
 });

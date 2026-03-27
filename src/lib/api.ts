@@ -21,13 +21,17 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
+  console.log(`[API] Starting request to ${API_BASE}${url}`, { method: options?.method || "GET" });
+
   let res: Response;
   try {
     res = await fetch(`${API_BASE}${url}`, {
       ...options,
       signal: options?.signal ?? controller.signal,
     });
+    console.log(`[API] Response received for ${url}: status=${res.status}`);
   } catch (error) {
+    console.error(`[API] Fetch failed for ${url}:`, error);
     if (error instanceof DOMException && error.name === "AbortError") {
       throw new Error("Request timed out. Please try again.");
     }
@@ -37,10 +41,14 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
   }
 
   if (!res.ok) {
+    console.error(`[API] Response not OK for ${url}: status=${res.status}`);
     const body = await res.json().catch(() => ({}));
+    console.error(`[API] Error body:`, body);
     throw new Error(body.error || `Request failed: ${res.status}`);
   }
-  return res.json();
+  const result = await res.json();
+  console.log(`[API] Success for ${url}:`, result);
+  return result;
 }
 
 async function requestForm<T>(url: string, formData: FormData): Promise<T> {
