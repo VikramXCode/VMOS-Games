@@ -29,11 +29,17 @@ let connectPromise: Promise<typeof mongoose> | null = null;
 
 const connectDatabase = async (): Promise<typeof mongoose> => {
   if (mongoose.connection.readyState === 1) {
+    console.log("✅ MongoDB already connected");
     return mongoose;
   }
 
   if (!connectPromise) {
-    connectPromise = mongoose.connect(MONGODB_URI);
+    console.log("🔄 Connecting to MongoDB:", MONGODB_URI.substring(0, 50) + "...");
+    connectPromise = mongoose.connect(MONGODB_URI).catch((err) => {
+      console.error("❌ MongoDB connection failed:", err.message);
+      connectPromise = null; // Reset so next call retries
+      throw err;
+    });
   }
 
   return connectPromise;
@@ -71,12 +77,25 @@ app.use("/api/consoles", consoleRoutes);
 app.use("/api/content", contentRoutes);
 
 app.get("/api/health", (_req, res) => {
-  res.json({ status: "ok", timestamp: new Date().toISOString() });
+  res.json({ status: "ok", timestamp: new Date().toISOString(), mongoState: mongoose.connection.readyState });
+});
+
+// Global error handler
+app.use((err: any, _req: any, res: any, _next: any) => {
+  console.error("❌ API Error:", err.message || err);
+  res.status(500).json({ error: err.message || "Internal server error" });
 });
 
 const expressHandler = serverless(app);
 
 export default async function handler(req: Parameters<typeof expressHandler>[0], res: Parameters<typeof expressHandler>[1]) {
-  await connectDatabase();
-  return expressHandler(req, res);
+  try {
+    console.log(`📨 ${req.method} ${req.url}`);
+    await connectDatabase();
+    console.log("✅ Database connected, handling request");
+    return expressHandler(req, res);
+  } catch (err) {
+    console.error("❌ Handler error:", err instanceof Error ? err.message : String(err));
+    res.status(500).json({ error: "Service is currently unavailable. Please check MongoDB connection." });
+  }
 }
