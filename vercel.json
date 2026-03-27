@@ -9,8 +9,14 @@
   },
   "rewrites": [
     {
-      "source": "/((?!api).)*",
+      "source": "/(.*)",
       "destination": "/index.html"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/[...path]"
     }
   ]
 }
