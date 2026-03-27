@@ -19,8 +19,10 @@ const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/vmos";
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:8080",
+  "http://localhost:3000",
   process.env.CLIENT_ORIGIN,
   process.env.CLIENT_ORIGIN_2,
+  process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined,
 ].filter((origin): origin is string => Boolean(origin));
 
 let connectPromise: Promise<typeof mongoose> | null = null;
@@ -42,7 +44,13 @@ const app = express();
 app.use(
   cors({
     origin: (origin, callback) => {
+      // Allow requests with no origin (same origin) or from allowed list
       if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+      // In production on Vercel, allow the deployment domain
+      if (process.env.VERCEL && origin?.includes("vercel.app")) {
         callback(null, true);
         return;
       }
