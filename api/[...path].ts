@@ -26,6 +26,24 @@ const parseCsv = (value?: string): string[] =>
 
 const explicitAllowedOrigins = parseCsv(process.env.ALLOWED_ORIGINS);
 
+const withTimeout = <T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> => {
+  return new Promise<T>((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      reject(new Error(message));
+    }, timeoutMs);
+
+    promise
+      .then((value) => {
+        clearTimeout(timeoutId);
+        resolve(value);
+      })
+      .catch((error) => {
+        clearTimeout(timeoutId);
+        reject(error);
+      });
+  });
+};
+
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:8080",
@@ -46,11 +64,15 @@ const connectDatabase = async (): Promise<typeof mongoose> => {
 
   if (!connectPromise) {
     console.log("🔄 Connecting to MongoDB...");
-    connectPromise = mongoose
-      .connect(MONGODB_URI, {
-        serverSelectionTimeoutMS: 5000,
-        socketTimeoutMS: 5000,
-      })
+    connectPromise = withTimeout(
+      mongoose.connect(MONGODB_URI, {
+        serverSelectionTimeoutMS: 7000,
+        connectTimeoutMS: 7000,
+        socketTimeoutMS: 7000,
+      }),
+      10000,
+      "MongoDB connect timed out"
+    )
       .then((m) => {
         console.log("✅ MongoDB connection established");
         return m;
@@ -90,14 +112,11 @@ app.use(express.json());
 // Request logging middleware
 app.use((req, res, next) => {
   console.log(`📨 [${new Date().toISOString()}] ${req.method} ${req.originalUrl || req.url}`);
-  
-  // Log response when sent
-  const originalSend = res.send;
-  res.send = function(data: any) {
+
+  res.on("finish", () => {
     console.log(`✅ [${new Date().toISOString()}] Response sent for ${req.method} ${req.originalUrl || req.url}: ${res.statusCode}`);
-    return originalSend.call(this, data);
-  };
-  
+  });
+
   next();
 });
 
@@ -134,9 +153,13 @@ const expressHandler = serverless(app);
 export default async function handler(req: Parameters<typeof expressHandler>[0], res: Parameters<typeof expressHandler>[1]) {
   try {
     console.log(`📨 ${req.method} ${req.url}`);
-    await connectDatabase();
+    await withTimeout(connectDatabase(), 12000, "Database bootstrap timed out");
     console.log("✅ Database connected, handling request");
-    return expressHandler(req, res);
+    return await withTimeout(
+      Promise.resolve(expressHandler(req, res)),
+      25000,
+      "Request handler timed out"
+    );
   } catch (err) {
     console.error("❌ Handler error:", err instanceof Error ? err.message : String(err));
     res.status(500).json({ error: "Service is currently unavailable. Please check MongoDB connection." });

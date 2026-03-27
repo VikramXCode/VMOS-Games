@@ -1,4 +1,5 @@
 const API_BASE = "/api";
+const REQUEST_TIMEOUT_MS = 12000;
 
 type ApiRecord = Record<string, unknown>;
 type ApiEntity = ApiRecord & { _id?: string; id?: string };
@@ -17,7 +18,24 @@ const headers = (withAuth = false, asJson = true): HeadersInit => {
 };
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${url}`, options);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${url}`, {
+      ...options,
+      signal: options?.signal ?? controller.signal,
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error("Request timed out. Please try again.");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.error || `Request failed: ${res.status}`);
@@ -26,11 +44,26 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
 }
 
 async function requestForm<T>(url: string, formData: FormData): Promise<T> {
-  const res = await fetch(`${API_BASE}${url}`, {
-    method: "POST",
-    headers: headers(true, false),
-    body: formData,
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${url}`, {
+      method: "POST",
+      headers: headers(true, false),
+      body: formData,
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error("Request timed out. Please try again.");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.error || `Request failed: ${res.status}`);
