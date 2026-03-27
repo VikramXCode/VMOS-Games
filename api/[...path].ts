@@ -16,6 +16,16 @@ dotenv.config();
 
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/vmos";
 
+const parseCsv = (value?: string): string[] =>
+  value
+    ? value
+        .split(",")
+        .map((entry) => entry.trim())
+        .filter(Boolean)
+    : [];
+
+const explicitAllowedOrigins = parseCsv(process.env.ALLOWED_ORIGINS);
+
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:8080",
@@ -23,6 +33,7 @@ const allowedOrigins = [
   process.env.CLIENT_ORIGIN,
   process.env.CLIENT_ORIGIN_2,
   process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined,
+  ...explicitAllowedOrigins,
 ].filter((origin): origin is string => Boolean(origin));
 
 let connectPromise: Promise<typeof mongoose> | null = null;
@@ -78,12 +89,12 @@ app.use(express.json());
 
 // Request logging middleware
 app.use((req, res, next) => {
-  console.log(`📨 [${new Date().toISOString()}] ${req.method} ${req.path}`);
+  console.log(`📨 [${new Date().toISOString()}] ${req.method} ${req.originalUrl || req.url}`);
   
   // Log response when sent
   const originalSend = res.send;
   res.send = function(data: any) {
-    console.log(`✅ [${new Date().toISOString()}] Response sent for ${req.method} ${req.path}: ${res.statusCode}`);
+    console.log(`✅ [${new Date().toISOString()}] Response sent for ${req.method} ${req.originalUrl || req.url}: ${res.statusCode}`);
     return originalSend.call(this, data);
   };
   
@@ -98,6 +109,15 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/slots", slotRoutes);
 app.use("/api/consoles", consoleRoutes);
 app.use("/api/content", contentRoutes);
+
+app.get("/", (_req, res) => {
+  res.json({
+    status: "ok",
+    service: "vmos-games-backend",
+    message: "Backend is running. Use /api/* endpoints.",
+    timestamp: new Date().toISOString(),
+  });
+});
 
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString(), mongoState: mongoose.connection.readyState });

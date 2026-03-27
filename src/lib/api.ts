@@ -1,4 +1,7 @@
-const API_BASE = "/api";
+const configuredApiBase = import.meta.env.VITE_API_BASE_URL?.trim();
+const API_BASE = configuredApiBase
+  ? configuredApiBase.replace(/\/$/, "")
+  : "/api";
 
 type ApiRecord = Record<string, unknown>;
 type ApiEntity = ApiRecord & { _id?: string; id?: string };
