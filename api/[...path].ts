@@ -34,12 +34,21 @@ const connectDatabase = async (): Promise<typeof mongoose> => {
   }
 
   if (!connectPromise) {
-    console.log("🔄 Connecting to MongoDB:", MONGODB_URI.substring(0, 50) + "...");
-    connectPromise = mongoose.connect(MONGODB_URI).catch((err) => {
-      console.error("❌ MongoDB connection failed:", err.message);
-      connectPromise = null; // Reset so next call retries
-      throw err;
-    });
+    console.log("🔄 Connecting to MongoDB...");
+    connectPromise = mongoose
+      .connect(MONGODB_URI, {
+        serverSelectionTimeoutMS: 5000,
+        socketTimeoutMS: 5000,
+      })
+      .then((m) => {
+        console.log("✅ MongoDB connection established");
+        return m;
+      })
+      .catch((err) => {
+        console.error("❌ MongoDB connection failed:", err.message);
+        connectPromise = null;
+        throw err;
+      });
   }
 
   return connectPromise;
@@ -66,6 +75,20 @@ app.use(
   }),
 );
 app.use(express.json());
+
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`📨 [${new Date().toISOString()}] ${req.method} ${req.path}`);
+  
+  // Log response when sent
+  const originalSend = res.send;
+  res.send = function(data: any) {
+    console.log(`✅ [${new Date().toISOString()}] Response sent for ${req.method} ${req.path}: ${res.statusCode}`);
+    return originalSend.call(this, data);
+  };
+  
+  next();
+});
 
 app.use("/api/products", productRoutes);
 app.use("/api/bookings", bookingRoutes);
